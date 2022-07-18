@@ -35,7 +35,7 @@ def update(goa_GO_df, goa_with_uniprot_info):
 
 
 
-f = open(f"data/goa/{species}/goa.gpa", "r")
+f = open(f"data/downloads/{species}_goa.gpa", "r")
 for i, line in enumerate(f.readlines()):
     print(f"line no: {i}")
     # if i<28536: continue # for debugging
