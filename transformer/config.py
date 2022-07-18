@@ -8,7 +8,7 @@ class Config(object):
                  GO="CC", 
                  lr=1e-4, 
                  batch_size=14, 
-                 n_epochs=50,
+                 n_epochs=300,
                  max_len_of_a_seq=512, 
                  embed_dim=256, 
                  n_encoder_layers=2, 

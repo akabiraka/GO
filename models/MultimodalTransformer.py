@@ -84,6 +84,7 @@ def train(model, data_loader, go_topo_data, criterion, optimizer, device):
 def val(model, data_loader, go_topo_data, criterion, device):
     model.eval()
     val_loss = 0.0
+    pred_scores, true_scores = [], []
 
     go_nodes, go_nodes_adj_mat = go_topo_data["src"].to(device), go_topo_data["attn_mask"].to(device)
     for i, (seq_tokens, y_true) in enumerate(data_loader):
@@ -95,8 +96,32 @@ def val(model, data_loader, go_topo_data, criterion, device):
         
         batch_loss = criterion(y_pred, y_true)
         val_loss = val_loss + batch_loss.item()
+        
+        pred_scores.append(y_pred.detach().cpu().numpy())
+        true_scores.append(y_true.detach().cpu().numpy())
+
         print(f"    val batch: {i}, loss: {batch_loss.item()}")
-    return val_loss/len(data_loader)
+
+    true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
+    print(true_scores.shape, pred_scores.shape)
+    out = {"MicroAvgF1": MicroAvgF1(true_scores, pred_scores),
+           "MicroAvgPrecision": MicroAvgPrecision(true_scores, pred_scores)}
+    return val_loss/len(data_loader), out
+
+
+import sklearn.metrics as metrics
+def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
+    best_micro_avg_f1 = 0.0
+    for t in range(1, 101):
+        th = t/100
+        pred_scores = np.where(pred_scores>th, 1, 0)
+        micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")
+        if micro_avg_f1 > best_micro_avg_f1:
+            best_micro_avg_f1 = micro_avg_f1
+    return best_micro_avg_f1
 
 
 
+def MicroAvgPrecision(true_scores:np.ndarray, pred_scores:np.ndarray):
+    micro_avg_prec = metrics.average_precision_score(true_scores, pred_scores, average="micro")
+    return micro_avg_prec

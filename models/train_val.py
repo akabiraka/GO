@@ -28,7 +28,7 @@ writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 # loading dataset
 go_topo_data = get_terms_to_dataset(config.species, config.GO)
 train_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="train")
-print(train_dataset.__getitem__(0))
+# print(train_dataset.__getitem__(0))
 val_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
@@ -41,12 +41,14 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 best_loss = np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, go_topo_data, criterion, optimizer, config.device)
-    val_loss = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
+    val_loss, metrics = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    writer.add_scalar('train loss', train_loss, epoch)
-    writer.add_scalar('val loss', val_loss, epoch)
+    writer.add_scalar('TrainLoss', train_loss, epoch)
+    writer.add_scalar('ValLoss', val_loss, epoch)
+    writer.add_scalar('MicroAvgF1', metrics["MicroAvgF1"], epoch)
+    writer.add_scalar('MicroAvgPrecision', metrics["MicroAvgPrecision"], epoch)
 
     # save model dict
     if val_loss < best_loss:

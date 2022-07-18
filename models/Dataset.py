@@ -16,7 +16,7 @@ class SeqAssociationDataset(Dataset):
         self.esm1b_batch_converter = esm1b_batch_converter
 
         self.df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
-        self.seq_db_dict = Utils.load_pickle(f"data/uniprotkb/dicts/{species}.pkl")
+        self.seq_db_dict = Utils.load_pickle(f"data/uniprotkb/{species}.pkl")
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
         
 
