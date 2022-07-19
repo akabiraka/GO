@@ -7,6 +7,7 @@ import math
 from data_preprocess.GO import Ontology
 import utils as Utils
 import sklearn.metrics as metrics
+import matplotlib.pyplot as plt
 
 
 
@@ -116,6 +117,8 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
     precisions = precisions[sorted_index]
     aupr = np.trapz(precisions, recalls)
     print(f'    AUPR: {aupr:0.3f}')
+
+    
     return tmax, fmax, smin, aupr
 
 
@@ -161,17 +164,37 @@ def Fmax(y_true:np.ndarray, y_scores:np.ndarray):
 
 
 
-def AUROC(y_true:np.ndarray, y_scores:np.ndarray):
+def AUROC(y_true:np.ndarray, y_scores:np.ndarray, pltpath=None):
     y_true, y_scores = y_true.flatten(), y_scores.flatten()
-    auroc = metrics.roc_auc_score(y_true, y_scores)
+    fpr, tpr, t= metrics.roc_curve(y_true, y_scores)
+    auroc = metrics.auc(fpr, tpr)
+    # auroc = metrics.roc_auc_score(y_true, y_scores) #same as previous 2 lines
     print(f"    AUROC: {auroc}")
+
+    # plot_area_under_curve(fpr, tpr, auroc, "True-positive rate", "False-positive rate", pltpath)
     return auroc
 
 
 
-def AUPR(y_true:np.ndarray, y_scores:np.ndarray):
+def AUPR(y_true:np.ndarray, y_scores:np.ndarray, pltpath=None):
     y_true, y_scores = y_true.flatten(), y_scores.flatten()
     prec, rec, t = metrics.precision_recall_curve(y_true, y_scores)
     aupr = metrics.auc(rec, prec)
     print(f"    AUPR: {aupr}")
+
+    # plot_area_under_curve(rec, prec, aupr, "Recall", "Precision", pltpath)
     return aupr
+
+
+def plot_area_under_curve(x, y, area_value, xlabel, ylabel, pltpath=None):
+    # i.e x=recalls, y=precissions
+    plt.figure()
+    lw = 2
+    plt.plot(x, y, color='darkorange', lw=lw, label=f'Area={area_value:0.2f}')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.legend()
+    if pltpath is not None: plt.savefig(pltpath, dpi=300, format="pdf", bbox_inches='tight', pad_inches=0.0)
+    else: plt.show()
