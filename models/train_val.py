@@ -11,7 +11,7 @@ from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, get_terms_to_dataset
 import models.MultimodalTransformer as MultimodalTransformer
 
-from eval_metrics import MicroAvgF1, MicroAvgPrecision
+import eval_metrics as eval_metrics
 
 
 config = Config()
@@ -40,26 +40,34 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 
 
-best_loss = np.inf
+best_loss, best_f1 = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, go_topo_data, criterion, optimizer, config.device)
     val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    micro_avg_f1 = MicroAvgF1(true_scores, pred_scores)
-    micro_avg_precision = MicroAvgPrecision(true_scores, pred_scores)
+    micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
+    micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
     writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
     writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
 
-    # save model dict
+    # save model dict based on loss
     if val_loss < best_loss:
         best_loss = val_loss
         torch.save({'epoch': epoch,
                     'model_state_dict': model.state_dict(),
-                    }, f"outputs/models/{out_filename}.pth")
+                    }, f"outputs/models/{out_filename}_loss.pth")
+
+
+    # save model dict based on performance
+    if micro_avg_f1 < best_f1:
+        best_f1 = micro_avg_f1
+        torch.save({'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    }, f"outputs/models/{out_filename}_pref.pth")
 
     
