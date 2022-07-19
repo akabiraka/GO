@@ -70,6 +70,9 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
     go_rels.calculate_ic(train_annotations + test_annotations)
     print("Log: finished computing ic")
     terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    idx_to_term_dict = {}
+    for term, idx in terms_dict.items():
+        idx_to_term_dict[idx] = term
 
     # pred_scores = np.random.rand(869, 244)
     fmax = 0.0
@@ -79,35 +82,33 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(1, 101): # the range in this loop has influence in the AUPR output
+    for t in range(1, 1001): # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
             pred_terms_indies = np.where(pred_scores[i] > threshold)[0]
-            annots = set([terms_dict.get(i) for i in pred_terms_indies])
+            annots = set([idx_to_term_dict.get(i) for i in pred_terms_indies])
+
             new_annots = set()
             for go_id in annots:
                 new_annots = new_annots | go_rels.get_anchestors(go_id)
             preds.append(new_annots)
 
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, test_annotations, preds)
-        # print(fscore, prec, rec, s, ru, mi)
-
-        avg_fp = sum(map(lambda x: len(x), fps)) / len(fps)
-        avg_ic = sum(map(lambda x: sum(map(lambda go_id: go_rels.get_ic(go_id), x)), fps)) / len(fps)
-        #print(f'{avg_fp} {avg_ic}')
+        
         precisions.append(prec)
         recalls.append(rec)
-        # print(f'Fscore: {fscore}, Precision: {prec}, Recall: {rec} S: {s}, RU: {ru}, MI: {mi} threshold: {threshold}')
+        
         if fmax < fscore:
             fmax = fscore
             tmax = threshold
         if smin > s:
             smin = s
 
+
     print(f'    threshold: {tmax}')
-    print(f'    Smin: {smin:0.3f}')
     print(f'    Fmax: {fmax:0.3f}')
+    print(f'    Smin: {smin:0.3f}')
     precisions = np.array(precisions)
     recalls = np.array(recalls)
     sorted_index = np.argsort(recalls)
@@ -144,7 +145,7 @@ def Fmax(y_true:np.ndarray, y_scores:np.ndarray):
     decision_th = 0.0
 
     for t in range(1, 101):
-        th = t/100 # according to Article1
+        th = t/100.0 # according to Article1
         y_pred = np.where(y_scores>th, 1, 0)
 
         prec = metrics.precision_score(y_true, y_pred, average="micro", zero_division=1)

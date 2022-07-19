@@ -35,6 +35,11 @@
     * output files: 
 
 ## Model development
+* `python models/train_val.py`
+* `python models/test.py`
+* `python models/eval_pred_scores.py`
 
 tensorboard --logdir=outputs/tensorboard_runs/
 scp -r akabir4@argo.orc.gmu.edu:/scratch/akabir4/GO/outputs/tensorboard_runs/* outputs/tensorboard_runs/
+scp -r akabir4@argo.orc.gmu.edu:/scratch/akabir4/GO/outputs/models/* outputs/models/
+scp -r akabir4@argo.orc.gmu.edu:/scratch/akabir4/GO/outputs/predictions/* outputs/predictions/
