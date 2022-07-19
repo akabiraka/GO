@@ -20,6 +20,10 @@ print(out_filename)
 model = MultimodalTransformer.Model(config=config).to(config.device)
 criterion = torch.nn.BCEWithLogitsLoss()
 
+# loading learned weights
+checkpoint = torch.load(f"outputs/models/{out_filename}.pth")
+model.load_state_dict(checkpoint['model_state_dict'])
+
 
 # loading dataset
 go_topo_data = get_terms_to_dataset(config.species, config.GO)
