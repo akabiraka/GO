@@ -4,7 +4,6 @@ sys.path.append("../GO")
 import torch
 from torch.utils.data import DataLoader
 torch.cuda.empty_cache()
-import numpy as np
 
 from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, get_terms_to_dataset
