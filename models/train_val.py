@@ -11,6 +11,8 @@ from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, get_terms_to_dataset
 import models.MultimodalTransformer as MultimodalTransformer
 
+from eval_metrics import MicroAvgF1, MicroAvgPrecision
+
 
 config = Config()
 out_filename = config.get_model_name()
@@ -41,14 +43,17 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 best_loss = np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, go_topo_data, criterion, optimizer, config.device)
-    val_loss, metrics = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
+    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
+    micro_avg_f1 = MicroAvgF1(true_scores, pred_scores)
+    micro_avg_precision = MicroAvgPrecision(true_scores, pred_scores)
+
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
-    writer.add_scalar('MicroAvgF1', metrics["MicroAvgF1"], epoch)
-    writer.add_scalar('MicroAvgPrecision', metrics["MicroAvgPrecision"], epoch)
+    writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
+    writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
 
     # save model dict
     if val_loss < best_loss:

@@ -30,3 +30,5 @@
 
 ## Model development
 
+tensorboard --logdir=outputs/tensorboard_runs/
+scp -r akabir4@argo.orc.gmu.edu:/scratch/akabir4/GO/outputs/tensorboard_runs/* outputs/tensorboard_runs/

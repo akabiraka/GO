@@ -59,6 +59,7 @@ class ProjectionLayer(torch.nn.Module):
 
 import numpy as np
 
+
 def train(model, data_loader, go_topo_data, criterion, optimizer, device):
     model.train()
     train_loss = 0.0
@@ -78,6 +79,7 @@ def train(model, data_loader, go_topo_data, criterion, optimizer, device):
         train_loss = train_loss + batch_loss.item()
         print(f"    train batch: {i}, loss: {batch_loss.item()}")
     return train_loss/len(data_loader)
+
 
 
 @torch.no_grad()
@@ -103,25 +105,8 @@ def val(model, data_loader, go_topo_data, criterion, device):
         print(f"    val batch: {i}, loss: {batch_loss.item()}")
 
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
-    print(true_scores.shape, pred_scores.shape)
-    out = {"MicroAvgF1": MicroAvgF1(true_scores, pred_scores),
-           "MicroAvgPrecision": MicroAvgPrecision(true_scores, pred_scores)}
-    return val_loss/len(data_loader), out
-
-
-import sklearn.metrics as metrics
-def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
-    best_micro_avg_f1 = 0.0
-    for t in range(1, 101):
-        th = t/100
-        pred_scores = np.where(pred_scores>th, 1, 0)
-        micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")
-        if micro_avg_f1 > best_micro_avg_f1:
-            best_micro_avg_f1 = micro_avg_f1
-    return best_micro_avg_f1
+    
+    return val_loss/len(data_loader), true_scores, pred_scores
 
 
 
-def MicroAvgPrecision(true_scores:np.ndarray, pred_scores:np.ndarray):
-    micro_avg_prec = metrics.average_precision_score(true_scores, pred_scores, average="micro")
-    return micro_avg_prec
