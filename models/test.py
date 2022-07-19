@@ -9,7 +9,7 @@ from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, get_terms_to_dataset
 import models.MultimodalTransformer as MultimodalTransformer
 
-import eval_metrics as eval_metrics
+import utils as Utils
 
 config = Config()
 out_filename = config.get_model_name()
@@ -32,9 +32,5 @@ test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 
 test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, go_topo_data, criterion, config.device)
-eval_metrics.Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test")
-eval_metrics.MicroAvgF1(true_scores, pred_scores)
-eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
-eval_metrics.Fmax(true_scores, pred_scores)
-eval_metrics.AUROC(true_scores, pred_scores)
-eval_metrics.AUPR(true_scores, pred_scores)
+Utils.save_as_pickle(true_scores, f"outputs/predictions/{out_filename}_true_scores.pkl")
+Utils.save_as_pickle(pred_scores, f"outputs/predictions/{out_filename}_pred_scores.pkl")
