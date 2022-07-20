@@ -14,7 +14,7 @@ true_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_true_scores
 pred_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_pred_scores.pkl")
 print(true_scores.shape, pred_scores.shape)
 
-eval_metrics.Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test")
+eval_metrics.Fmax_Smin_AUPR(pred_scores, species=config.species, GO=config.GO, eval_dataset="test")
 eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
 eval_metrics.MicroAvgF1(true_scores, pred_scores)
 eval_metrics.AUROC(true_scores, pred_scores, pltpath=f"outputs/images/{out_filename}_auroc.pdf")

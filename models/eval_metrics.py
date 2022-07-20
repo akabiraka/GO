@@ -108,15 +108,15 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
 
 
     print(f'    threshold: {tmax}')
-    print(f'    Fmax: {fmax:0.3f}')
-    print(f'    Smin: {smin:0.3f}')
+    print(f'    Fmax: {fmax:0.4f}')
+    print(f'    Smin: {smin:0.4f}')
     precisions = np.array(precisions)
     recalls = np.array(recalls)
     sorted_index = np.argsort(recalls)
     recalls = recalls[sorted_index]
     precisions = precisions[sorted_index]
     aupr = np.trapz(precisions, recalls)
-    print(f'    AUPR: {aupr:0.3f}')
+    print(f'    AUPR: {aupr:0.4f}')
 
     
     return tmax, fmax, smin, aupr
@@ -131,14 +131,14 @@ def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
         micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")
         if micro_avg_f1 > best_micro_avg_f1:
             best_micro_avg_f1 = micro_avg_f1
-    print(f'    MicroAvgF1: {best_micro_avg_f1:0.3f}')
+    print(f'    MicroAvgF1: {best_micro_avg_f1:0.4f}')
     return best_micro_avg_f1
 
 
 
 def MicroAvgPrecision(true_scores:np.ndarray, pred_scores:np.ndarray):
     micro_avg_prec = metrics.average_precision_score(true_scores, pred_scores, average="micro")
-    print(f'    MicroAvgPrecision: {micro_avg_prec:0.3f}')
+    print(f'    MicroAvgPrecision: {micro_avg_prec:0.4f}')
     return micro_avg_prec
 
 
@@ -159,7 +159,7 @@ def Fmax(y_true:np.ndarray, y_scores:np.ndarray):
             fmax = f
             decision_th = th
             
-    print(f"    Fmax: {fmax} at decision_th: {decision_th}")
+    print(f"    Fmax: {fmax:0.4f} at decision_th: {decision_th}")
     return fmax
 
 
@@ -169,7 +169,7 @@ def AUROC(y_true:np.ndarray, y_scores:np.ndarray, pltpath=None):
     fpr, tpr, t= metrics.roc_curve(y_true, y_scores)
     auroc = metrics.auc(fpr, tpr)
     # auroc = metrics.roc_auc_score(y_true, y_scores) #same as previous 2 lines
-    print(f"    AUROC: {auroc}")
+    print(f"    AUROC: {auroc:0.4f}")
 
     # plot_area_under_curve(fpr, tpr, auroc, "True-positive rate", "False-positive rate", pltpath)
     return auroc
@@ -180,7 +180,7 @@ def AUPR(y_true:np.ndarray, y_scores:np.ndarray, pltpath=None):
     y_true, y_scores = y_true.flatten(), y_scores.flatten()
     prec, rec, t = metrics.precision_recall_curve(y_true, y_scores)
     aupr = metrics.auc(rec, prec)
-    print(f"    AUPR: {aupr}")
+    print(f"    AUPR: {aupr:0.4f}")
 
     # plot_area_under_curve(rec, prec, aupr, "Recall", "Precision", pltpath)
     return aupr
