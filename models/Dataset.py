@@ -5,6 +5,8 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 import utils as Utils
+import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
 
 class SeqAssociationDataset(Dataset):
     def __init__(self, species, GO, esm1b_batch_converter, max_len_of_a_seq=512, dataset="train") -> None:
@@ -49,6 +51,11 @@ class SeqAssociationDataset(Dataset):
         return seq_int_rep, y_true
 
 
+    
+            
+
+    
+
 
 def get_terms_to_dataset(species, GO):
     GO_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
@@ -63,3 +70,19 @@ def get_terms_to_dataset(species, GO):
     return data
 
     
+def get_class_weights(species, GO):
+    # computing class weights from the train data
+    terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
+    classes = np.array([value for key, value in terms_dict.items()])
+    
+    all_labels = []
+    for i, row in train_df.iterrows():
+        annots = row["GO_id"]
+        for term in annots:
+            all_labels.append(terms_dict[term])
+        # break
+    all_labels = np.array(all_labels)
+    class_weights = compute_class_weight("balanced", classes=classes, y=all_labels)
+    class_weights = torch.tensor(class_weights, dtype=torch.float)
+    return class_weights

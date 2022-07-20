@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 torch.cuda.empty_cache()
 
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, get_terms_to_dataset
+from models.Dataset import SeqAssociationDataset, get_terms_to_dataset, get_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import utils as Utils
@@ -19,7 +19,8 @@ print(f"Running test: {out_filename}")
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss()
+class_weights = get_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss(class_weights)
 
 # loading learned weights
 checkpoint = torch.load(f"outputs/models/{out_filename}.pth")

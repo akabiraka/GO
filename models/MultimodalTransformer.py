@@ -1,6 +1,7 @@
 import sys
 sys.path.append("../GO")
 import torch
+import torch.nn.functional as F
 import esm
 from transformer.config import Config
 from transformer.factory import build_transformer_model
@@ -8,6 +9,7 @@ from transformer.factory import build_transformer_model
 class Model(torch.nn.Module):
     def __init__(self, config:Config) -> None:
         super(Model, self).__init__()
+        self.config = config
 
         self.GOTopoTransformer = build_transformer_model(config=config, decoder=None) # returns only node embeddings
 
@@ -15,6 +17,8 @@ class Model(torch.nn.Module):
         self.batch_converter = alphabet.get_batch_converter()
 
         self.projection_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim)
+
+        self.prediction_layer = torch.nn.Linear(config.vocab_size, config.vocab_size)
         
 
     def forward(self, go_nodes, go_nodes_adj_mat, seq_batch_tokens):
@@ -28,11 +32,15 @@ class Model(torch.nn.Module):
         # print(f"token_reps: {token_reps.shape}")
 
         seq_reps = self.projection_layer(token_reps)
+        seq_reps = F.relu(seq_reps)
+        seq_reps = F.dropout(seq_reps, p=self.config.dropout)
         # print(f"seq_reps: {seq_reps.shape}")
 
 
-        out = seq_reps.matmul(GO_terms_rep.t())
-        # print(f"out: {out.shape}")
+        scores = seq_reps.matmul(GO_terms_rep.t())
+        # print(f"scores: {scores.shape}")
+
+        out = self.prediction_layer(scores)
         return out
 
 
