@@ -29,6 +29,9 @@
 #SBATCH --mem=64000MB
 
 ##nvidia-smi
-python models/train_val.py
-##python models/test.py
+##python models/train_val.py
+
+python models/test.py
+python models/eval_pred_scores.py
+
 ##python models/example_esm_1b.py

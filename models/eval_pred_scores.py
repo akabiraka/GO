@@ -5,7 +5,10 @@ from transformer.config import Config
 import eval_metrics as eval_metrics
 import utils as Utils
 
-out_filename = "Model_yeast_CC_1e-05_14_500_244_512_256_1024_2_8_0.3_True_False_cuda_perf" #_loss
+config = Config()
+out_filename = config.get_model_name()
+out_filename = out_filename+"_perf" #_loss
+print(f"Running evaluation: {out_filename}")
 
 true_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_true_scores.pkl")
 pred_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_pred_scores.pkl")

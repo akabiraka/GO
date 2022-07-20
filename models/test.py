@@ -14,7 +14,7 @@ import utils as Utils
 config = Config()
 out_filename = config.get_model_name()
 out_filename = out_filename+"_perf" #_loss
-print(out_filename)
+print(f"Running test: {out_filename}")
 
 
 # loading model, criterion, optimizer, summarywriter

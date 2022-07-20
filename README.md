@@ -1,7 +1,7 @@
 
 
 ## GO processing tasks:
-* `python data_preprocess/separate_and_remove_nonexist_uniprotid_from_GOA.py`
+* Ontology class from data_preprocess/GO.py loads the terms file.
 
 ## UniProtKB-SwissProt sequence processing tasks:
 * `python data_preprocess/create_uniprot_species_dict.py`
