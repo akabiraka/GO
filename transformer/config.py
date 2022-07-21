@@ -3,12 +3,18 @@ sys.path.append("../GO")
 import torch
 
 class Config(object):
+    def __new__(cls):
+        # Singleton class instance
+        if not hasattr(cls, "instance"):
+            cls.instance = super(Config, cls).__new__(cls)
+        return cls.instance
+
     def __init__(self, 
                  species="yeast", 
                  GO="CC", 
                  lr=1e-5, 
                  batch_size=14, 
-                 n_epochs=500,
+                 n_epochs=10,
                  max_len_of_a_seq=512, 
                  embed_dim=256, 
                  n_encoder_layers=2, 
@@ -49,6 +55,7 @@ class Config(object):
         return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}" +\
                f"_{self.dim_ff}_{self.n_encoder_layers}_{self.n_attn_heads}_{self.dropout}_{self.add_node_embed_layer}_{self.add_positional_encoding_layer}" +\
                f"_{self.device}"
+
 
 # config = Config(max_len=2708)
 # print(config.get_model_name())

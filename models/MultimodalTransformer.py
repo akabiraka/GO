@@ -66,6 +66,30 @@ class ProjectionLayer(torch.nn.Module):
 
 
 import numpy as np
+from data_preprocess.GO import Ontology
+import utils as Utils
+
+config = Config()
+go_rels = Ontology('data/downloads/go.obo', with_rels=True)
+studied_terms_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_to_index_dicts/{config.GO}.pkl")
+studied_terms_set = set(studied_terms_dict.keys())
+idx_to_term_dict = {i:term for term, i in studied_terms_dict.items()}
+
+def compute_loss(y_pred, y_true, criterion):
+    rows, cols = y_pred.shape
+    for i in range(rows):
+        for j in range(cols):
+            if y_pred[i, j] > 0.5:
+                y_pred[i, j] = 1.
+                GO_id = idx_to_term_dict[j]
+                ancestors = go_rels.get_anchestors(GO_id)
+                ancestors = set(ancestors).intersection(studied_terms_set) # taking ancestors if they re in the studied terms
+                for term in ancestors:
+                    y_pred[i, studied_terms_dict[term]] = 1.
+
+    # print(y_pred)
+    batch_loss = criterion(y_pred, y_true)
+    return batch_loss, y_pred
 
 
 def train(model, data_loader, go_topo_data, criterion, optimizer, device):
@@ -80,7 +104,7 @@ def train(model, data_loader, go_topo_data, criterion, optimizer, device):
         model.zero_grad(set_to_none=True)
         y_pred = model(go_nodes, go_nodes_adj_mat, seq_tokens)
         
-        batch_loss = criterion(y_pred, y_true)
+        batch_loss, _ = compute_loss(y_pred, y_true, criterion) #criterion(y_pred, y_true)
         batch_loss.backward()
         optimizer.step()
         
@@ -104,7 +128,7 @@ def val(model, data_loader, go_topo_data, criterion, device):
         model.zero_grad(set_to_none=True)
         y_pred = model(go_nodes, go_nodes_adj_mat, seq_tokens)
         
-        batch_loss = criterion(y_pred, y_true)
+        batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) #criterion(y_pred, y_true)
         val_loss = val_loss + batch_loss.item()
         
         pred_scores.append(y_pred.detach().cpu().numpy())

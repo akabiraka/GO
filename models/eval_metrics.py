@@ -70,10 +70,9 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
 
     go_rels.calculate_ic(train_annotations + test_annotations)
     print("Log: finished computing ic")
-    terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
-    idx_to_term_dict = {}
-    for term, idx in terms_dict.items():
-        idx_to_term_dict[idx] = term
+    studied_terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    studied_terms_set = set(studied_terms_dict.keys())
+    idx_to_term_dict = {i:term for term, i in studied_terms_dict.items()}
 
     # pred_scores = np.random.rand(869, 244)
     fmax = 0.0
@@ -92,7 +91,9 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
 
             new_annots = set()
             for go_id in annots:
-                new_annots = new_annots | go_rels.get_anchestors(go_id)
+                ancestors = go_rels.get_anchestors(go_id)
+                ancestors = set(ancestors).intersection(studied_terms_set) # taking ancestors only in the studied terms
+                new_annots = new_annots | ancestors
             preds.append(new_annots)
 
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, test_annotations, preds)

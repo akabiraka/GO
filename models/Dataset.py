@@ -74,15 +74,19 @@ def get_class_weights(species, GO):
     # computing class weights from the train data
     terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
     train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
-    classes = np.array([value for key, value in terms_dict.items()])
     
-    all_labels = []
-    for i, row in train_df.iterrows():
-        annots = row["GO_id"]
-        for term in annots:
-            all_labels.append(terms_dict[term])
-        # break
-    all_labels = np.array(all_labels)
+    classes = np.array([value for key, value in terms_dict.items()])
+    all_labels = np.hstack(train_df["GO_id"].tolist())
+
+    # all_labels = []
+    # for i, row in train_df.iterrows():
+    #     annots = row["GO_id"]
+    #     for term in annots:
+    #         all_labels.append(terms_dict[term])
+    #     # break
+    # all_labels = np.array(all_labels)
+
+    
     class_weights = compute_class_weight("balanced", classes=classes, y=all_labels)
     class_weights = torch.tensor(class_weights, dtype=torch.float)
     return class_weights
