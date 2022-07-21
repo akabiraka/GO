@@ -76,7 +76,7 @@ def get_class_weights(species, GO):
     train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
     
     classes = np.array([value for key, value in terms_dict.items()])
-    all_labels = np.hstack(train_df["GO_id"].tolist())
+    all_labels = [terms_dict[term] for term in np.hstack(train_df["GO_id"].tolist())]
 
     # all_labels = []
     # for i, row in train_df.iterrows():
@@ -86,6 +86,7 @@ def get_class_weights(species, GO):
     #     # break
     # all_labels = np.array(all_labels)
 
+    # print(all_labels)
     
     class_weights = compute_class_weight("balanced", classes=classes, y=all_labels)
     class_weights = torch.tensor(class_weights, dtype=torch.float)
