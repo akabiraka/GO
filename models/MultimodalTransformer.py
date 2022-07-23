@@ -110,6 +110,7 @@ def train(model, data_loader, go_topo_data, criterion, optimizer, device):
         
         train_loss = train_loss + batch_loss.item()
         print(f"    train batch: {i}, loss: {batch_loss.item()}")
+        #break
     return train_loss/len(data_loader)
 
 
@@ -137,7 +138,7 @@ def val(model, data_loader, go_topo_data, criterion, device):
         true_scores.append(y_true.detach().cpu().numpy())
 
         # print(f"    val batch: {i}, loss: {batch_loss.item()}")
-
+        #break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
     return val_loss/len(data_loader), true_scores, pred_scores
 

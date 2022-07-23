@@ -35,7 +35,7 @@ train_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_con
 # print(train_dataset.__getitem__(0))
 val_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True, drop_last=True)
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, drop_last=True)
+val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False, drop_last=True)
 print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 
