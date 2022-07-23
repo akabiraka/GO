@@ -3,7 +3,7 @@ sys.path.append("../GO")
 import copy
 import torch.nn as nn
 
-from transformer.components import FeedForward, MultiheadAttentionWrapper, Embeddings, PositionalEncoding, TermsSeqRelationForward
+from transformer.components import FeedForward, MultiheadAttentionWrapper, Embeddings, PositionalEncoding
 from transformer.encoder import EncoderLayer, Encoder
 from transformer.decoder import Decoder
 from transformer.encoder_decoder import EncoderDecoder
