@@ -22,8 +22,8 @@ print(out_filename)
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-class_weights = get_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss(class_weights)
+# class_weights = get_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 

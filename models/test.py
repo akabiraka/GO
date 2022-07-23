@@ -19,8 +19,8 @@ print(f"Running test: {out_filename}")
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-class_weights = get_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss(class_weights)
+# class_weights = get_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss()
 
 # loading learned weights
 checkpoint = torch.load(f"outputs/models/{out_filename}.pth")

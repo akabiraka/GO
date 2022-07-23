@@ -17,6 +17,17 @@ class FeedForward(nn.Module):
         return self.w_2(self.dropout(F.relu(self.w_1(x))))
 
 
+
+class TermsSeqRelationForward(nn.Module):
+    def __init__(self, batch_size, dim_embed, dropout=0.3) -> None:
+        super(TermsSeqRelationForward, self).__init__()
+        self.linear = nn.Linear(batch_size, dim_embed)
+
+    def forward(self, x):
+        return F.dropout(F.relu(self.linear(x)))
+
+
+
 class MultiheadAttentionWrapper(nn.Module):
     """This class will be used to extend MultiheadAttention."""
     def __init__(self, dim_embed, n_attn_heads) -> None:

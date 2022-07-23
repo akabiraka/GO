@@ -3,7 +3,7 @@ sys.path.append("../GO")
 import copy
 import torch.nn as nn
 
-from transformer.components import FeedForward, MultiheadAttentionWrapper, Embeddings, PositionalEncoding
+from transformer.components import FeedForward, MultiheadAttentionWrapper, Embeddings, PositionalEncoding, TermsSeqRelationForward
 from transformer.encoder import EncoderLayer, Encoder
 from transformer.decoder import Decoder
 from transformer.encoder_decoder import EncoderDecoder
@@ -17,7 +17,8 @@ def build_transformer_model(config:Config, decoder:Decoder):
     # encoder
     attn = MultiheadAttentionWrapper(config.embed_dim, config.n_attn_heads)
     ff = FeedForward(config.embed_dim, config.dim_ff, config.dropout)
-    enc_layer = EncoderLayer(config.embed_dim, cp(attn), cp(ff), config.dropout)
+    termsSeqRel = TermsSeqRelationForward(config.batch_size, config.embed_dim, config.dropout)
+    enc_layer = EncoderLayer(config.embed_dim, cp(termsSeqRel), cp(attn), cp(ff), config.dropout)
     encoder = Encoder(enc_layer, config.n_encoder_layers)
 
     # example decoders
