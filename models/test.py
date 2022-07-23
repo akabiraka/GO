@@ -30,7 +30,7 @@ model.load_state_dict(checkpoint['model_state_dict'])
 # loading dataset
 go_topo_data = get_terms_to_dataset(config.species, config.GO)
 test_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="test")
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, drop_last=True)
+test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 
 test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, go_topo_data, criterion, config.device)
