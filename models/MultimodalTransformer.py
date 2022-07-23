@@ -17,37 +17,35 @@ class Model(torch.nn.Module):
         self.SeqTransformer, alphabet = esm.pretrained.esm1_t12_85M_UR50S()
         self.batch_converter = alphabet.get_batch_converter()
 
-        self.projection_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim)
+        self.projection_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim, config.dropout)
 
         self.prediction_layer = torch.nn.Linear(config.vocab_size, config.vocab_size)
         
 
     def forward(self, go_nodes, go_nodes_adj_mat, seq_batch_tokens):
-
-        # print(seq_batch_tokens.shape)
-        #with torch.no_grad():
-        results = self.SeqTransformer(seq_batch_tokens, repr_layers=[12], return_contacts=False)
-        token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
-        # print(f"token_reps: {token_reps.shape}")
-
-        seq_reps = self.projection_layer(token_reps) #seq_reps:[batch_size, embed_dim]
-        # print(f"seq_reps: {seq_reps.shape}")
-
-        GO_terms_rep = self.GOTopoTransformer(x=go_nodes, seq_reps=seq_reps, key_padding_mask=None, attn_mask=go_nodes_adj_mat)
-        # print(f"GO_terms_reps: {GO_terms_rep.shape}")
-
-        scores = seq_reps.matmul(GO_terms_rep.t())
-        # print(f"scores: {scores.shape}")
-
-        out = self.prediction_layer(scores)
-        return out
-
+       # print(seq_batch_tokens.shape)
+       #with torch.no_grad():
+       results = self.SeqTransformer(seq_batch_tokens, repr_layers=[12], return_contacts=False)
+       token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
+       # print(f"token_reps: {token_reps.shape}")
+       
+       seq_reps = self.projection_layer(token_reps) #seq_reps:[batch_size, embed_dim]
+       # print(f"seq_reps: {seq_reps.shape}")
+       
+       GO_terms_rep = self.GOTopoTransformer(x=go_nodes, seq_reps=seq_reps, key_padding_mask=None, attn_mask=go_nodes_adj_mat)
+       # print(f"GO_terms_reps: {GO_terms_rep.shape}")
+       
+       scores = seq_reps.matmul(GO_terms_rep.t())
+       # print(f"scores: {scores.shape}")
+       
+       out = self.prediction_layer(scores)
+       return out
 
 
 class ProjectionLayer(torch.nn.Module):
-    def __init__(self, inp_embed_dim, out_embed_dim):
+    def __init__(self, inp_embed_dim, out_embed_dim, dropout=0.3):
         super(ProjectionLayer, self).__init__()
-
+        self.dropout = dropout
         self.attn_linear = torch.nn.Linear(inp_embed_dim, 1)
         self.projection = torch.nn.Linear(inp_embed_dim, out_embed_dim)
 
@@ -61,7 +59,7 @@ class ProjectionLayer(torch.nn.Module):
         seq_reps = torch.sum(weights * last_hidden_state, dim=1)  # [batch_size, dim_embed]
         seq_reps = self.projection(seq_reps)
         seq_reps = F.relu(seq_reps)
-        seq_reps = F.dropout(seq_reps, p=self.config.dropout)
+        seq_reps = F.dropout(seq_reps, p=self.dropout)
         return seq_reps
 
 
@@ -104,12 +102,14 @@ def train(model, data_loader, go_topo_data, criterion, optimizer, device):
         model.zero_grad(set_to_none=True)
         y_pred = model(go_nodes, go_nodes_adj_mat, seq_tokens)
         
-        batch_loss, _ = criterion(y_pred, y_true) #compute_loss(y_pred, y_true, criterion) 
+        # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
+        batch_loss = criterion(y_pred, y_true)
+
         batch_loss.backward()
         optimizer.step()
         
         train_loss = train_loss + batch_loss.item()
-        # print(f"    train batch: {i}, loss: {batch_loss.item()}")
+        print(f"    train batch: {i}, loss: {batch_loss.item()}")
     return train_loss/len(data_loader)
 
 
@@ -128,7 +128,9 @@ def val(model, data_loader, go_topo_data, criterion, device):
         model.zero_grad(set_to_none=True)
         y_pred = model(go_nodes, go_nodes_adj_mat, seq_tokens)
         
-        batch_loss, y_pred = criterion(y_pred, y_true) #compute_loss(y_pred, y_true, criterion) 
+        # batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) 
+        batch_loss = criterion(y_pred, y_true)
+
         val_loss = val_loss + batch_loss.item()
         
         pred_scores.append(y_pred.detach().cpu().numpy())
