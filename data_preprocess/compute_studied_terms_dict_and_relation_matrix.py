@@ -18,19 +18,39 @@ def create_studied_GO_terms_dict(GO_id_list, species, GO):
     return GO_dict
 
 
-def create_GO_topo_adj_matrix(GO_dict, species, GO):
+
+def get_related_terms(GO_id, relation="ancestors"):
+    if relation=="ancestors":
+        terms = go_rels.get_anchestors(GO_id)
+    elif relation=="children":
+        terms = go_rels.get_children(GO_id)
+    else:
+        raise NotImplementedError(f"Given relation={relation} is not implemented yet.")
+    
+    return terms
+
+
+
+
+# i-th row denotes the ancestor/children-indices of i if corresponding entry is 1
+def create_terms_relation_matrix(GO_dict, species, GO, relation="ancestors"):
+    # relation could be [ancestors, children]
+
     n_GO_terms = len(GO_dict)
     relation_matrix = np.zeros(shape=(n_GO_terms, n_GO_terms), dtype=np.int16) # realtion_matrix: R
     np.fill_diagonal(relation_matrix, 1) # encoding thyself as ancestor using 1
 
     for GO_id, i in GO_dict.items():
-        ancestors = go_rels.get_anchestors(GO_id)
-        for ancestor in ancestors:
-            ancestor_index = GO_dict.get(ancestor)
-            relation_matrix[i, ancestor_index] = 1
+        terms = get_related_terms(GO_id, relation)
+        for term in terms:
+            term_i = GO_dict.get(term)
+            relation_matrix[i, term_i] = 1
 
-    Utils.save_as_pickle(relation_matrix, f"data/goa/{species}/studied_GO_terms_adj_matrix/{GO}.pkl")
+    Utils.save_as_pickle(relation_matrix, f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_{relation}.pkl")
     print(f"{species}-{GO}: {relation_matrix.shape}")
+
+
+
     
 
 species = "yeast" # human, yeast
@@ -42,5 +62,6 @@ for GO in ["BP", "CC", "MF"]:
     GO_dict = create_studied_GO_terms_dict(GO_id_list, species, GO)
     
     
-    create_GO_topo_adj_matrix(GO_dict, species, GO)
+    create_terms_relation_matrix(GO_dict, species, GO, relation="ancestors")
+    create_terms_relation_matrix(GO_dict, species, GO, relation="children")
 

@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, get_terms_to_dataset, get_class_weights
+from models.Dataset import SeqAssociationDataset, get_terms_dataset, get_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import eval_metrics as eval_metrics
@@ -30,7 +30,7 @@ writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 
 
 # loading dataset
-go_topo_data = get_terms_to_dataset(config.species, config.GO)
+go_topo_data = get_terms_dataset(config.species, config.GO)
 train_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="train")
 # print(train_dataset.__getitem__(0))
 val_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="val")

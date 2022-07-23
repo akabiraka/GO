@@ -10,11 +10,11 @@ class EncoderDecoder(nn.Module):
         self.node_embed_layer = node_embed_layer
         self.positional_encoding = positional_encoding
     
-    def forward(self, x, seq_reps, key_padding_mask=None, attn_mask=None):
+    def forward(self, x, key_padding_mask=None, attn_mask=None):
         """seq_reps:[batch_size, embed_dim]"""
         if self.node_embed_layer is not None: x = self.node_embed_layer(x)
         if self.positional_encoding is not None: x = self.positional_encoding(x)
-        x, _ = self.encoder(x, seq_reps, key_padding_mask, attn_mask)
+        x, _ = self.encoder(x, key_padding_mask, attn_mask)
         if self.decoder is not None: x, _ = self.decoder(x)
         return x
     

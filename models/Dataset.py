@@ -57,19 +57,26 @@ class SeqAssociationDataset(Dataset):
     
 
 
-def get_terms_to_dataset(species, GO):
+def get_terms_dataset(species, GO):
     GO_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
 
     data = {}
-    data["src"] = torch.tensor(list(GO_dict.values())) # node embeddings from 0 to vocab_size-1
-    adj_mat = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_adj_matrix/{GO}.pkl")
-    data["attn_mask"] = torch.logical_not(torch.tensor(adj_mat, dtype=torch.bool))
+    data["nodes"] = torch.tensor(list(GO_dict.values())) # node embeddings from 0 to vocab_size-1
+    
+    adj_mat = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_ancestors.pkl")
+    data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(adj_mat, dtype=torch.bool))
 
-    print(f"#-terms: {data['src'].shape}")
-    print(f"terms relations: {data['attn_mask'].shape}")
+    adj_mat = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
+    data["children_rel_matrix"] = torch.tensor(adj_mat, dtype=torch.float32)
+
+
+    print(f"#-terms: {data['nodes'].shape}")
+    print(f"ancestors_rel_matrix: {data['ancestors_rel_matrix'].shape}")
+    print(f"children_rel_matrix: {data['children_rel_matrix'].shape}")
     return data
 
     
+
 def get_class_weights(species, GO):
     # computing class weights from the train data
     terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
@@ -78,16 +85,6 @@ def get_class_weights(species, GO):
     classes = np.array([value for key, value in terms_dict.items()])
     all_labels = [terms_dict[term] for term in np.hstack(train_df["GO_id"].tolist())]
 
-    # all_labels = []
-    # for i, row in train_df.iterrows():
-    #     annots = row["GO_id"]
-    #     for term in annots:
-    #         all_labels.append(terms_dict[term])
-    #     # break
-    # all_labels = np.array(all_labels)
-
-    # print(all_labels)
-    
     class_weights = compute_class_weight("balanced", classes=classes, y=all_labels)
     class_weights = torch.tensor(class_weights, dtype=torch.float)
     return class_weights

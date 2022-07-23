@@ -18,13 +18,13 @@ class FeedForward(nn.Module):
 
 
 
-class TermsSeqRelationForward(nn.Module):
-    def __init__(self, batch_size, dim_embed, dropout=0.3) -> None:
-        super(TermsSeqRelationForward, self).__init__()
-        self.linear = nn.Linear(batch_size, dim_embed)
+# class TermsSeqRelationForward(nn.Module):
+#     def __init__(self, batch_size, dim_embed, dropout=0.3) -> None:
+#         super(TermsSeqRelationForward, self).__init__()
+#         self.linear = nn.Linear(batch_size, dim_embed)
 
-    def forward(self, x):
-        return F.dropout(F.relu(self.linear(x)))
+#     def forward(self, x):
+#         return F.dropout(F.relu(self.linear(x)))
 
 
 

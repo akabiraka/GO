@@ -163,7 +163,7 @@ class Ontology(object):
     def get_namespace(self, term_id):
         return self.ont[term_id]['namespace']
     
-    def get_term_set(self, term_id):
+    def get_children(self, term_id):
         if term_id not in self.ont:
             return set()
         term_set = set()
@@ -184,6 +184,9 @@ class Ontology(object):
 
 # analyzing
 # go_rels = Ontology('data/downloads/go.obo', with_rels=True)
+# print(go_rels.get_children("GO:0006915"))
+# print(go_rels.get_parents("GO:0006915"))
+# print(go_rels.get_anchestors("GO:0006915"))
 # print(f"#-total GO terms: {len(go_rels.ont)}")
 # for x in ["bp", "cc", "mf"]:
 #     go_set = go_rels.get_namespace_terms(NAMESPACES[x])

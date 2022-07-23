@@ -26,10 +26,10 @@
 ##--------------GPU jobs------------------
 #SBATCH --partition=gpuq
 #SBATCH --gres=gpu:1
+#SBATCH --mem=50G                               # for CPU mem allocation
 ##SBATCH --nodes=1                            # Request N nodes
 ##SBATCH --ntasks-per-node=8                  # Request n   cores per node
-#SBATCH --mem=50G
-##SBATCH --mem-per-gpu=50G
+
 
 ##nvidia-smi
 python models/train_val.py
