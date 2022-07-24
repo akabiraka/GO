@@ -49,8 +49,9 @@ class PredictionRefinementLayer(torch.nn.Module):
 
     def forward(self, seqs_reps, terms_reps, terms_children_rel_mat):
         scores = seqs_reps.matmul(terms_reps.t()) # shape: n_seqs, n_terms
-        scores = F.dropout(F.relu(self.w1(scores)), self.dropout)
         scores = scores.matmul(terms_children_rel_mat.t())
+        scores = self.w1(scores)
+        
         
 
         # scores = scores.matmul(terms_children_rel_mat.t())
@@ -78,8 +79,8 @@ class ProjectionLayer(torch.nn.Module):
         weights = torch.softmax(score, dim=1) # [batch_size, seq_len, 1]
         seq_reps = torch.sum(weights * last_hidden_state, dim=1)  # [batch_size, dim_embed]
         seq_reps = self.projection(seq_reps)
-        seq_reps = F.relu(seq_reps)
-        seq_reps = F.dropout(seq_reps, p=self.dropout)
+        # seq_reps = F.relu(seq_reps)
+        # seq_reps = F.dropout(seq_reps, p=self.dropout)
         return seq_reps
 
 
