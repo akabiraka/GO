@@ -17,7 +17,7 @@ class Config(object):
                  n_epochs=300,
                  max_len_of_a_seq=512, 
                  embed_dim=256, 
-                 n_encoder_layers=2, 
+                 n_encoder_layers=3, 
                  n_attn_heads=8, 
                  dropout=0.3,
                  add_node_embed_layer=True, 

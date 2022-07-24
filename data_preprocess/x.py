@@ -10,7 +10,7 @@ import utils as Utils
 from sklearn.utils.class_weight import compute_class_weight
 
 species = "yeast"
-GO = "CC"
+GO = "BP"
 
 #Checking if the proteins in the train, val and test set have at least 1 annotation from studied GO terms. 
 # for dataset in ["train", "val", "test"]:
@@ -60,3 +60,23 @@ GO = "CC"
 #                 y_pred[i, studied_terms_dict[term]] = 1.
 
 # print(y_pred)
+
+# checking what children relation matrix encodes. 
+# It has either all 1's or all 0's (except itself).
+relation_matrix = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
+n_rows = relation_matrix.shape[0]
+for i in range(0, 20):
+    if 0 in relation_matrix[i]:
+        print(i)
+        # print(relation_matrix[i])
+# print(np.where(relation_matrix==0)[0].shape)
+
+
+# go_rels = Ontology('data/downloads/go.obo', with_rels=True)
+# studied_terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+# studied_terms_set = set(studied_terms_dict.keys())
+
+# for term_id, i in studied_terms_dict.items():
+#     print(i, term_id, len(studied_terms_set.intersection(go_rels.get_children(term_id))))
+    
+#     if i==10: break

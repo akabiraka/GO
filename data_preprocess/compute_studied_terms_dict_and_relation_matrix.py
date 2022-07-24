@@ -36,12 +36,15 @@ def get_related_terms(GO_id, relation="ancestors"):
 def create_terms_relation_matrix(GO_dict, species, GO, relation="ancestors"):
     # relation could be [ancestors, children]
 
+    studied_terms_set = set(GO_dict.keys())
+
     n_GO_terms = len(GO_dict)
     relation_matrix = np.zeros(shape=(n_GO_terms, n_GO_terms), dtype=np.int16) # realtion_matrix: R
     np.fill_diagonal(relation_matrix, 1) # encoding thyself as ancestor using 1
 
     for GO_id, i in GO_dict.items():
         terms = get_related_terms(GO_id, relation)
+        terms = studied_terms_set.intersection(terms)
         for term in terms:
             term_i = GO_dict.get(term)
             relation_matrix[i, term_i] = 1
