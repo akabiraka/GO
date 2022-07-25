@@ -13,7 +13,7 @@ class Config(object):
                  species="yeast", 
                  GO="CC", 
                  lr=1e-5, 
-                 batch_size=14, 
+                 batch_size=32, 
                  n_epochs=300,
                  max_len_of_a_seq=512, 
                  embed_dim=256, 
