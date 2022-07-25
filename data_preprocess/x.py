@@ -63,12 +63,12 @@ GO = "BP"
 
 # checking what children relation matrix encodes. 
 # It has either all 1's or all 0's (except itself).
-relation_matrix = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
-n_rows = relation_matrix.shape[0]
-for i in range(0, 20):
-    if 0 in relation_matrix[i]:
-        print(i)
-        # print(relation_matrix[i])
+# relation_matrix = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
+# n_rows = relation_matrix.shape[0]
+# for i in range(0, 20):
+#     if 0 in relation_matrix[i]:
+#         print(i)
+#         # print(relation_matrix[i])
 # print(np.where(relation_matrix==0)[0].shape)
 
 
@@ -80,3 +80,12 @@ for i in range(0, 20):
 #     print(i, term_id, len(studied_terms_set.intersection(go_rels.get_children(term_id))))
     
 #     if i==10: break
+
+
+
+# num_of_labels_list = []
+# for i, row in df.iterrows():
+#     uniprotid, annots = row["uniprot_id"], row["GO_id"]
+#     print(f"{i}-{uniprotid}: {len(annots)}")
+    
+#     if i==100: break

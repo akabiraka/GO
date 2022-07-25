@@ -22,8 +22,8 @@ print(out_filename)
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-# class_weights = get_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss()
+class_weights = get_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss(class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 
@@ -51,13 +51,13 @@ for epoch in range(1, config.n_epochs+1):
 
     micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
     micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
-    fmax = eval_metrics.Fmax(true_scores, pred_scores)
+    # fmax = eval_metrics.Fmax(true_scores, pred_scores)
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
     writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
     writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
-    writer.add_scalar('Fmax', fmax, epoch)
+    # writer.add_scalar('Fmax', fmax, epoch)
 
     # save model dict based on loss
     if val_loss < best_loss:
