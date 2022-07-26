@@ -44,13 +44,13 @@ class PredictionRefinementLayer(torch.nn.Module):
     def __init__(self, inp_embed_dim, out_embed_dim, dropout=0.3) -> None:
         super(PredictionRefinementLayer, self).__init__()
         self.dropout = dropout
-        self.w1 = torch.nn.Linear(inp_embed_dim, out_embed_dim)
+        # self.w1 = torch.nn.Linear(inp_embed_dim, out_embed_dim)
         # self.w2 = torch.nn.Linear(out_embed_dim, out_embed_dim)
 
     def forward(self, seqs_reps, terms_reps, terms_children_rel_mat):
         scores = seqs_reps.matmul(terms_reps.t()) # shape: n_seqs, n_terms
-        scores = scores.matmul(terms_children_rel_mat.t())
-        scores = self.w1(scores)
+        # scores = scores.matmul(terms_children_rel_mat.t())
+        # scores = self.w1(scores)
         
         
 
