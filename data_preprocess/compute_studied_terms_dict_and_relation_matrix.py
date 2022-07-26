@@ -24,6 +24,8 @@ def get_related_terms(GO_id, relation="ancestors"):
         terms = go_rels.get_anchestors(GO_id)
     elif relation=="children":
         terms = go_rels.get_children(GO_id)
+    elif relation=="parents":
+        terms = go_rels.get_parents(GO_id)
     else:
         raise NotImplementedError(f"Given relation={relation} is not implemented yet.")
     
@@ -34,7 +36,7 @@ def get_related_terms(GO_id, relation="ancestors"):
 
 # i-th row denotes the ancestor/children-indices of i if corresponding entry is 1
 def create_terms_relation_matrix(GO_dict, species, GO, relation="ancestors"):
-    # relation could be [ancestors, children]
+    # relation could be [ancestors, children, parents]
 
     studied_terms_set = set(GO_dict.keys())
 
@@ -66,5 +68,6 @@ for GO in ["BP", "CC", "MF"]:
     
     
     create_terms_relation_matrix(GO_dict, species, GO, relation="ancestors")
+    create_terms_relation_matrix(GO_dict, species, GO, relation="parents")
     create_terms_relation_matrix(GO_dict, species, GO, relation="children")
 
