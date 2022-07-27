@@ -86,7 +86,7 @@ def Fmax_Smin_AUPR(pred_scores, eval_dataset="test"):
     smin = 1000000.0
     rus = []
     mis = []
-    for t in range(1, 1001): # the range in this loop has influence in the AUPR output
+    for t in range(1, 101): # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
         for i, row in enumerate(test_df.itertuples()):
@@ -146,7 +146,7 @@ def apply_true_path_rule_on_pred_scores(pred_scores, th):#, idx_to_term_dict:dic
 # TPR: true path rule
 def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
     best_micro_avg_f1 = 0.0
-    for t in range(1, 1001):
+    for t in range(1, 101):
         decision_th = t/100
         ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, decision_th)
         micro_avg_f1 = metrics.f1_score(true_scores, ext_pred_scores, average="micro")
@@ -159,7 +159,7 @@ def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_ter
 
 def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
     best_micro_avg_f1 = 0.0
-    for t in range(1, 1001):
+    for t in range(1, 101):
         decision_th = t/100
         pred_scores = np.where(pred_scores>decision_th, 1, 0)
         micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")
