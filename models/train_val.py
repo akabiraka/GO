@@ -42,12 +42,6 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 
 
-# for evaluation purposes
-go_rels = Ontology('data/downloads/go.obo', with_rels=True)
-term_to_idx_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_to_index_dicts/{config.GO}.pkl")
-idx_to_term_dict = {i:term for term, i in term_to_idx_dict.items()}
-terms_set = set(term_to_idx_dict.keys())
-
 
 
 best_loss, best_f1 = np.inf, np.inf
@@ -57,7 +51,7 @@ for epoch in range(1, config.n_epochs+1):
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores, idx_to_term_dict, term_to_idx_dict, terms_set, go_rels)
+    micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
     # micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
     # micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
     # fmax = eval_metrics.Fmax(true_scores, pred_scores)
