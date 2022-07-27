@@ -87,13 +87,13 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
         preds = []
         for i, row in enumerate(test_df.itertuples()):
             pred_terms_indies = np.where(pred_scores[i] > threshold)[0]
-            annots = set([idx_to_term_dict.get(i) for i in pred_terms_indies])
+            annots = set([idx_to_term_dict.get(j) for j in pred_terms_indies])
 
             new_annots = set()
             for go_id in annots:
                 ancestors = go_rels.get_anchestors(go_id)
                 ancestors = set(ancestors).intersection(studied_terms_set) # taking ancestors only in the studied terms
-                new_annots = new_annots | ancestors
+                new_annots = new_annots | ancestors # set union
             preds.append(new_annots)
 
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, test_annotations, preds)
@@ -123,10 +123,39 @@ def Fmax_Smin_AUPR(pred_scores, species="yeast", GO="CC", eval_dataset="test"):
     return tmax, fmax, smin, aupr
 
 
+def apply_true_path_rule_on_pred_scores(pred_scores, th, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
+    ext_pred_scores = np.zeros(pred_scores.shape)
+    rows, cols = pred_scores.shape
+    for i in range(rows):
+        for j in range(cols):
+            if not pred_scores[i, j] > th: continue
+
+            ext_pred_scores[i, j] = 1.0
+
+            ancestors = go_rels.get_anchestors(idx_to_term_dict.get(j))
+            ancestors = set(ancestors).intersection(terms_set) # taking ancestors those are in the studied terms
+            for ancestor in ancestors:
+                ext_pred_scores[i, term_to_idx_dict.get(ancestor)] = 1.0
+    
+    return ext_pred_scores
+
+# TPR: true path rule
+def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
+    best_micro_avg_f1 = 0.0
+    for t in range(1, 1001):
+        th = t/100
+        ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, th, idx_to_term_dict, term_to_idx_dict, terms_set, go_rels)
+        micro_avg_f1 = metrics.f1_score(true_scores, ext_pred_scores, average="micro")
+        if micro_avg_f1 > best_micro_avg_f1:
+            best_micro_avg_f1 = micro_avg_f1
+    
+    print(f'    MicroAvgF1: {best_micro_avg_f1:0.4f}')
+    return best_micro_avg_f1
+
 
 def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
     best_micro_avg_f1 = 0.0
-    for t in range(1, 101):
+    for t in range(1, 1001):
         th = t/100
         pred_scores = np.where(pred_scores>th, 1, 0)
         micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")

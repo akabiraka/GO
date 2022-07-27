@@ -25,8 +25,8 @@ class Model(torch.nn.Module):
 
     def forward(self, go_nodes, terms_ancestors_rel_mat, terms_children_rel_mat, seq_batch_tokens):
         # print(seq_batch_tokens.shape)
-        with torch.no_grad():
-            results = self.SeqTransformer(seq_batch_tokens, repr_layers=[12], return_contacts=False)
+        # with torch.no_grad():
+        results = self.SeqTransformer(seq_batch_tokens, repr_layers=[12], return_contacts=False)
         token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
         # print(f"token_reps: {token_reps.shape}")
         
