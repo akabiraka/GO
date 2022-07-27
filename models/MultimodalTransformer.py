@@ -155,7 +155,7 @@ def val(model, data_loader, go_topo_data, criterion, device):
 
         val_loss = val_loss + batch_loss.item()
         
-        pred_scores.append(y_pred.detach().cpu().numpy())
+        pred_scores.append(torch.sigmoid(y_pred).detach().cpu().numpy())
         true_scores.append(y_true.detach().cpu().numpy())
 
         # print(f"    val batch: {i}, loss: {batch_loss.item()}")
