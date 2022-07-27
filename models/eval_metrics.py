@@ -148,7 +148,7 @@ def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_ter
     best_micro_avg_f1 = 0.0
     for t in range(1, 1001):
         decision_th = t/100
-        ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, decision_th, idx_to_term_dict, term_to_idx_dict, terms_set, go_rels)
+        ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, decision_th)
         micro_avg_f1 = metrics.f1_score(true_scores, ext_pred_scores, average="micro")
         if micro_avg_f1 > best_micro_avg_f1:
             best_micro_avg_f1 = micro_avg_f1
