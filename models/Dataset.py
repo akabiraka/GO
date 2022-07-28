@@ -7,21 +7,28 @@ from torch.utils.data import Dataset
 import utils as Utils
 import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
+import random
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, esm1b_batch_converter, max_len_of_a_seq=512, dataset="train") -> None:
+    def __init__(self, species, GO, esm1b_batch_converter, n_samples_from_pool=5, max_len_of_a_seq=512, dataset="train") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
         self.max_len_of_a_seq = max_len_of_a_seq
         self.esm1b_batch_converter = esm1b_batch_converter
+        self.n_samples = n_samples_from_pool
 
         self.df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
         self.seq_db_dict = Utils.load_pickle(f"data/uniprotkb/{species}.pkl")
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
         
 
-
+        self.dev_df = pd.read_csv(f"data/goa/{species}/dev_test_set_cutoff/{GO}/dev.csv")
+        self.GOid_vs_uniprotid_list_df = self.dev_df.groupby("GO_id")["uniprot_id"].apply(list).reset_index() # GO-id vs list of uniprotid
+        # GOid_vs_uniprotid_list_df["features"] = GOid_vs_uniprotid_list_df["uniprot_id"].map(lambda x: get_go_seq_features(x, crnt_uniprot_id))#random.sample(x, n_samples))
+        # print(GOid_vs_uniprotid_list_df.head())
+        self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
+        self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
     
     def __len__(self):
         return self.df.shape[0]
@@ -45,14 +52,58 @@ class SeqAssociationDataset(Dataset):
         uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq)
         seq_tokens = seq_tokens[0]
 
+        # the seq is padded with 1's by esm-1b
         seq_int_rep = torch.ones(self.max_len_of_a_seq+1, dtype=torch.int32) ## NOTE: token 0 is always a beginning-of-sequence token, so the first residue is token 1.
         seq_int_rep[:seq_tokens.shape[0]] = seq_tokens
         # print(seq_int_rep.shape, y_true.shape)
-        return seq_int_rep, y_true
+
+        terms = self.get_terms_representations(row["uniprot_id"])
+        return seq_int_rep, y_true, terms
+
+
+
+    def get_terms_representations(self, crnt_uniprot_id):
+        nodes = []
+        for term, id in self.terms_dict.items():
+            # print(term, id)
+            uniprotid_list = self.GOid_vs_uniprotid_list_df[self.GOid_vs_uniprotid_list_df["GO_id"]==term]["uniprot_id"].item()
+            
+            term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprot_id) 
+            # print(term_seq_features.shape)
+            nodes.append(term_seq_features)
+
+            # break
+
+
+        data = {}
+        data["nodes"] = torch.stack(nodes)
+        data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
+        data["children_rel_matrix"] = torch.tensor(self.terms_children, dtype=torch.float32)
+
+        return data    
+    
+    def get_term_seq_features(self, uniprotid_list, crnt_uniprot_id):
+        uniprotid_list = list(filter((crnt_uniprot_id).__ne__, uniprotid_list)) # removing current uniprotid from seq-feature pool
+        uniprotid_list = random.sample(uniprotid_list, self.n_samples)
+        features = []
+        for uniprotid in uniprotid_list:
+            uniprotid_seq_pair = [(uniprotid, self.seq_db_dict.get(uniprotid)["seq"][:self.max_len_of_a_seq])]
+            uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq_pair)
+
+            seq_tokens = seq_tokens[0] #shape: [max_len_of_a_seq+1]
+
+            # the seq is padded with 1's by esm-1b
+            seq_int_rep = torch.ones(self.max_len_of_a_seq+1, dtype=torch.int32)
+            seq_int_rep[:seq_tokens.shape[0]] = seq_tokens
+
+            features.append(seq_int_rep)
+        
+        features = torch.vstack(features)
+        # print(features.shape) # n_samples, max_len_of_a_seq+1
+        return features
 
 
     
-            
 
     
 
@@ -63,11 +114,11 @@ def get_terms_dataset(species, GO):
     data = {}
     data["nodes"] = torch.tensor(list(GO_dict.values())) # node embeddings from 0 to vocab_size-1
     
-    adj_mat = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_ancestors.pkl")
-    data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(adj_mat, dtype=torch.bool))
+    ancestors = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_ancestors.pkl")
+    data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(ancestors, dtype=torch.bool))
 
-    adj_mat = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
-    data["children_rel_matrix"] = torch.tensor(adj_mat, dtype=torch.float32)
+    children = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
+    data["children_rel_matrix"] = torch.tensor(children, dtype=torch.float32)
 
 
     print(f"#-terms: {data['nodes'].shape}")

@@ -24,19 +24,20 @@ print(out_filename)
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-# class_weights = get_class_weights(config.species, config.GO).to(config.device)
-pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_class_weights)
+class_weights = get_class_weights(config.species, config.GO).to(config.device)
+# pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 
 
 
 # loading dataset
-go_topo_data = get_terms_dataset(config.species, config.GO)
-train_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="train")
-# print(train_dataset.__getitem__(0))
-val_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="val")
+# go_topo_data = get_terms_dataset(config.species, config.GO)
+train_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="train")
+# seq_int_rep, y_true, terms = train_dataset.__getitem__(0)
+# print(seq_int_rep.shape, y_true.shape, terms["nodes"].shape, terms["ancestors_rel_matrix"].shape, terms["children_rel_matrix"].shape)
+val_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
@@ -47,8 +48,8 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 best_loss, best_f1 = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
-    train_loss = MultimodalTransformer.train(model, train_loader, go_topo_data, criterion, optimizer, config.device)
-    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, go_topo_data, criterion, config.device)
+    train_loss = MultimodalTransformer.train(model, train_loader, criterion, optimizer, config.device)
+    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 

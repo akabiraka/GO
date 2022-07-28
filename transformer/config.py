@@ -16,11 +16,12 @@ class Config(object):
                  batch_size=14, 
                  n_epochs=300,
                  max_len_of_a_seq=512, 
-                 embed_dim=256, 
+                 embed_dim=256,
+                 n_samples_from_pool=5, 
                  n_encoder_layers=5, 
                  n_attn_heads=8, 
                  dropout=0.3,
-                 add_node_embed_layer=True, 
+                 add_node_embed_layer=False, 
                  add_positional_encoding_layer=False) -> None:
         super(Config, self).__init__()
 
@@ -38,6 +39,7 @@ class Config(object):
         self.max_num_of_nodes = self.vocab_size # this will not be used
         self.max_len_of_a_seq = max_len_of_a_seq #1024, this also means number of nodes for graphs
         self.embed_dim = embed_dim #256, embed_dim must be divisible by n_attn_heads
+        self.n_samples_from_pool = n_samples_from_pool
 
         # Encoder configs
         self.dim_ff =  4*self.embed_dim # if dim_ff is None else dim_ff
@@ -47,12 +49,12 @@ class Config(object):
         self.add_node_embed_layer = add_node_embed_layer
         self.add_positional_encoding_layer = add_positional_encoding_layer
         
-        self.device = "cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
+        self.device = "cpu"#"cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
         self.emsb_embed_dim = 768
         
 
-    def get_model_name(self, task="Modelv8") -> str:
-        return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}" +\
+    def get_model_name(self, task="Modelv9") -> str:
+        return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}_{self.n_samples_from_pool}" +\
                f"_{self.dim_ff}_{self.n_encoder_layers}_{self.n_attn_heads}_{self.dropout}_{self.add_node_embed_layer}_{self.add_positional_encoding_layer}" +\
                f"_{self.device}"
 

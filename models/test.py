@@ -29,11 +29,10 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 
 # loading dataset
-go_topo_data = get_terms_dataset(config.species, config.GO)
-test_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.max_len_of_a_seq, dataset="test")
+test_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="test")
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 
-test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, go_topo_data, criterion, config.device)
+test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, criterion, config.device)
 Utils.save_as_pickle(true_scores, f"outputs/predictions/{out_filename}_true_scores.pkl")
 Utils.save_as_pickle(pred_scores, f"outputs/predictions/{out_filename}_pred_scores.pkl")
