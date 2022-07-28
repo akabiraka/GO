@@ -88,3 +88,35 @@ def get_class_weights(species, GO):
     class_weights = compute_class_weight("balanced", classes=classes, y=all_labels)
     class_weights = torch.tensor(class_weights, dtype=torch.float)
     return class_weights
+
+
+def get_positive_class_weights(species, GO):
+    terms_to_idx_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
+
+    def generate_true_label(GO_terms):
+        y_true = np.zeros(len(terms_to_idx_dict), dtype=np.int32)
+        for term in GO_terms:
+            y_true[terms_to_idx_dict.get(term)] = 1
+        return y_true
+
+
+    all_labels = []
+    for i, row in train_df.iterrows():
+        GO_terms = row["GO_id"]
+        y_true = generate_true_label(GO_terms)
+        all_labels.append(y_true)
+
+    all_labels = np.array(all_labels)
+
+    positive_cls_weights = []
+    for i in range(all_labels.shape[1]):
+        n_pos = (all_labels[:, i]==1).sum()
+        n_neg = (all_labels[:, i]==0).sum()
+        weight = n_neg / n_pos
+        positive_cls_weights.append(weight)
+
+
+    return torch.tensor(positive_cls_weights, dtype=torch.float32)
+
+# get_positive_class_weights("yeast", "BP")

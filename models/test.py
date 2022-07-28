@@ -20,6 +20,7 @@ print(f"Running test: {out_filename}")
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
 class_weights = get_class_weights(config.species, config.GO).to(config.device)
+# pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
 criterion = torch.nn.BCEWithLogitsLoss(class_weights)
 
 # loading learned weights

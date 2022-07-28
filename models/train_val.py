@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, get_terms_dataset, get_class_weights
+from models.Dataset import SeqAssociationDataset, get_terms_dataset, get_class_weights, get_positive_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import eval_metrics as eval_metrics
@@ -24,8 +24,9 @@ print(out_filename)
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-class_weights = get_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss(class_weights)
+# class_weights = get_class_weights(config.species, config.GO).to(config.device)
+pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
+criterion = torch.nn.BCEWithLogitsLoss(pos_weight=pos_class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 
