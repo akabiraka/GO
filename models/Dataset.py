@@ -60,14 +60,14 @@ class SeqAssociationDataset(Dataset):
 
     def get_seq_representation(self, uniprotid_seq):
         uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq) # NOTE: token 0 is always a beginning-of-sequence token, so the first residue is token 1.
-        seq_tokens = seq_tokens[0]
         
-        seq_int_rep = torch.ones(self.max_seq_len+1, dtype=torch.int32) # esm1b padding token is 1
-        seq_int_rep[:seq_tokens.shape[0]] = seq_tokens # shape: [max_seq_len]
+        seq_int_rep = torch.ones((1, self.max_seq_len+1), dtype=torch.int32) # esm1b padding token is 1
+        seq_int_rep[0, :seq_tokens.shape[1]] = seq_tokens # shape: [1, max_seq_len]
         
         with torch.no_grad():
             results = self.esm1b(seq_int_rep, repr_layers=[12], return_contacts=False)
-        token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
+        token_reps = results["representations"][12] #1, max_seq_len, esmb_embed_dim
+        token_reps.squeeze_(0)
 
         return token_reps
 
