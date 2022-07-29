@@ -49,7 +49,7 @@ class Config(object):
         self.add_node_embed_layer = add_node_embed_layer
         self.add_positional_encoding_layer = add_positional_encoding_layer
         
-        self.device = "cpu"#"cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
+        self.device = "cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
         self.emsb_embed_dim = 768
         
 
