@@ -74,6 +74,7 @@ class TermEmbeddingLayer(torch.nn.Module):
                     results = esm1b(x[i, j], repr_layers=[12], return_contacts=False) #n_nodes, max_seq_len, esmb_embed_dim
                 rep = results["representations"][12]
                 rep = self.seq_proj_layer(rep) # n_nodes, embed_dim
+                print(rep.shape)
                 nodes_rep.append(rep)
             
             nodes_rep = self.node_proj_layer(torch.stack(nodes_rep)) 
