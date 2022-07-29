@@ -66,10 +66,10 @@ class SeqAssociationDataset(Dataset):
         
         with torch.no_grad():
             results = self.esm1b(seq_int_rep, repr_layers=[12], return_contacts=False)
-        token_reps = results["representations"][12] #1, max_seq_len, esmb_embed_dim
-        token_reps.squeeze_(0)
+        seq_rep = results["representations"][12] #1, max_seq_len, esmb_embed_dim
+        seq_rep.squeeze_(0)
 
-        return token_reps
+        return seq_rep
 
 
     def get_terms_graph(self, crnt_uniprot_id):
@@ -100,15 +100,15 @@ class SeqAssociationDataset(Dataset):
             uniprotid_seq_pair = [(uniprotid, self.seq_db_dict.get(uniprotid)["seq"][:self.max_seq_len])]
             uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq_pair)
 
-            seq_tokens = seq_tokens[0] #shape: [max_seq_len+1]
 
             # the seq is padded with 1's by esm-1b
-            seq_int_rep = torch.ones(self.max_seq_len+1, dtype=torch.int32)
-            seq_int_rep[:seq_tokens.shape[0]] = seq_tokens
+            seq_int_rep = torch.ones((1, self.max_seq_len+1), dtype=torch.int32) # esm1b padding token is 1
+            seq_int_rep[0, :seq_tokens.shape[1]] = seq_tokens # shape: [1, max_seq_len]
 
             with torch.no_grad():
                 results = self.esm1b(seq_int_rep, repr_layers=[12], return_contacts=False)
             seq_rep = results["representations"][12] #n_seq, max_seq_len, esm1b_embed_dim
+            seq_rep.squeeze_(0)
 
             features.append(seq_rep)
         
