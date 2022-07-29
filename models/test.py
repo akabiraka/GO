@@ -29,7 +29,7 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 
 # loading dataset
-test_dataset = SeqAssociationDataset(config.species, config.GO, model.batch_converter, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="test")
+test_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="test")
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 

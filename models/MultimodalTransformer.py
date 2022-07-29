@@ -13,9 +13,6 @@ class Model(torch.nn.Module):
         super(Model, self).__init__()
         self.config = config 
 
-        self.esm1b, alphabet = esm.pretrained.esm1_t12_85M_UR50S()
-        self.batch_converter = alphabet.get_batch_converter()
-
         self.GOTopoTransformer = build_transformer_model(config=config, decoder=None) # returns only node embeddings
         self.term_embedding_layer = TermEmbeddingLayer(config)
 
@@ -24,19 +21,18 @@ class Model(torch.nn.Module):
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
         
 
-    def forward(self, go_nodes, terms_ancestors_rel_mat, terms_children_rel_mat, seq_batch_tokens):
-        # print(seq_batch_tokens.shape)
-        with torch.no_grad():
-            results = self.esm1b(seq_batch_tokens, repr_layers=[12], return_contacts=False)
-        token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
-        # print(f"token_reps: {token_reps.shape}")
+    def forward(self, term_nodes, terms_ancestors_rel_mat, terms_children_rel_mat, seqs_reps):
+        """ term_nodes: [batch_size, n_nodes, max_seq_len, 768]
+            terms_ancestors_rel_mat: [batch_size, n_nodes, n_nodes]
+            terms_children_rel_mat: [batch_size, n_nodes, n_nodes]
+            seq_rep: [batch_size, max_seq_len, 768]
+        """
+        seqs_reps = self.seq_projection_layer(seqs_reps) #[batch_size, embed_dim]
+        print(f"seqs_reps: {seqs_reps.shape}")
         
-        seqs_reps = self.seq_projection_layer(token_reps) #seqs_reps:[batch_size, embed_dim]
-        # print(f"seqs_reps: {seqs_reps.shape}")
-        
-        terms_reps = self.term_embedding_layer(x=go_nodes, esm1b=self.esm1b)
-        terms_reps = self.GOTopoTransformer(x=go_nodes, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
-        # print(f"terms_reps: {terms_reps.shape}")
+        terms_reps = self.term_embedding_layer(x=term_nodes)
+        terms_reps = self.GOTopoTransformer(x=term_nodes, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
+        print(f"terms_reps: {terms_reps.shape}")
         
         scores = self.prediction_refinement_layer(seqs_reps, terms_reps, terms_children_rel_mat)
         return scores
@@ -64,17 +60,14 @@ class TermEmbeddingLayer(torch.nn.Module):
         self.seq_proj_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim, config.dropout)
         self.node_proj_layer = ProjectionLayer(config.embed_dim, config.embed_dim, config.dropout)
 
-    def forward(self, x, esm1b):
-        batch_size, n_nodes, n_samples, seq_len = x.shape
+    def forward(self, x):
+        batch_size, n_nodes, n_samples, max_seq_len, esm1b_embed_dim = x.shape
         batches = []
         for i in range(batch_size):
             nodes_rep = []
             for j in range(n_nodes):
-                with torch.no_grad():
-                    results = esm1b(x[i, j], repr_layers=[12], return_contacts=False) #n_nodes, max_seq_len, esmb_embed_dim
-                rep = results["representations"][12]
-                rep = self.seq_proj_layer(rep) # n_nodes, embed_dim
-                print(rep.shape)
+                rep = self.seq_proj_layer(x[i, j]) # n_samples, embed_dim
+                # print(rep.shape)
                 nodes_rep.append(rep)
             
             nodes_rep = self.node_proj_layer(torch.stack(nodes_rep)) 
@@ -114,12 +107,12 @@ def train(model, data_loader, criterion, optimizer, device):
     model.train()
     train_loss = 0.0
 
-    for i, (seq_tokens, y_true, terms) in enumerate(data_loader):
+    for i, (seq_rep, terms_graph, y_true) in enumerate(data_loader):
         y_true = y_true.to(device)
         # print(y_true.shape)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms["nodes"].to(device), terms["ancestors_rel_matrix"].to(device), terms["children_rel_matrix"].to(device), seq_tokens.to(device))
+        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), terms_graph["children_rel_matrix"].to(device), seq_rep.to(device))
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)
@@ -140,12 +133,12 @@ def val(model, data_loader, criterion, device):
     val_loss = 0.0
     pred_scores, true_scores = [], []
 
-    for i, (seq_tokens, y_true, terms) in enumerate(data_loader):
+    for i, (seq_rep, terms_graph, y_true) in enumerate(data_loader):
         y_true = y_true.to(device)
         # print(y_true.shape)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms["nodes"].to(device), terms["ancestors_rel_matrix"].to(device), terms["children_rel_matrix"].to(device), seq_tokens.to(device))
+        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), terms_graph["children_rel_matrix"].to(device), seq_rep.to(device))
         
         # batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)

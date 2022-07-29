@@ -8,15 +8,18 @@ import utils as Utils
 import numpy as np
 from sklearn.utils.class_weight import compute_class_weight
 import random
+import esm
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, esm1b_batch_converter, n_samples_from_pool=5, max_len_of_a_seq=512, dataset="train") -> None:
+    def __init__(self, species, GO, n_samples_from_pool=5, max_seq_len=512, dataset="train") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
-        self.max_len_of_a_seq = max_len_of_a_seq
-        self.esm1b_batch_converter = esm1b_batch_converter
+        self.max_seq_len = max_seq_len
         self.n_samples = n_samples_from_pool
+
+        self.esm1b, alphabet = esm.pretrained.esm1_t12_85M_UR50S()
+        self.esm1b_batch_converter = alphabet.get_batch_converter()
 
         self.df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
         self.seq_db_dict = Utils.load_pickle(f"data/uniprotkb/{species}.pkl")
@@ -30,6 +33,7 @@ class SeqAssociationDataset(Dataset):
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
         self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
     
+
     def __len__(self):
         return self.df.shape[0]
 
@@ -44,25 +48,32 @@ class SeqAssociationDataset(Dataset):
 
     def __getitem__(self, i):
         row = self.df.loc[i]
-        uniprotid_seq, GO_terms = [(row["uniprot_id"], self.seq_db_dict.get(row["uniprot_id"])["seq"][:self.max_len_of_a_seq])], row["GO_id"]
+        uniprotid_seq, GO_terms = [(row["uniprot_id"], self.seq_db_dict.get(row["uniprot_id"])["seq"][:self.max_seq_len])], row["GO_id"]
         # print(uniprotid_seq)
 
-        y_true = self.generate_true_label(GO_terms)
+        y_true = self.generate_true_label(GO_terms) # shape: [n_terms]
+        seq_rep = self.get_seq_representation(uniprotid_seq) # shape: [max_seq_len, esm1b_embed_dim]
+        terms_graph = self.get_terms_graph(row["uniprot_id"]) 
 
-        uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq)
+        return seq_rep, terms_graph, y_true
+
+
+    def get_seq_representation(self, uniprotid_seq):
+        uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq) # NOTE: token 0 is always a beginning-of-sequence token, so the first residue is token 1.
         seq_tokens = seq_tokens[0]
+        
+        seq_int_rep = torch.ones(self.max_seq_len+1, dtype=torch.int32) # esm1b padding token is 1
+        seq_int_rep[:seq_tokens.shape[0]] = seq_tokens # shape: [max_seq_len]
+        
+        with torch.no_grad():
+            results = self.esm1b(seq_int_rep, repr_layers=[12], return_contacts=False)
+        token_reps = results["representations"][12] #n_seq, max_seq_len, esmb_embed_dim
 
-        # the seq is padded with 1's by esm-1b
-        seq_int_rep = torch.ones(self.max_len_of_a_seq+1, dtype=torch.int32) ## NOTE: token 0 is always a beginning-of-sequence token, so the first residue is token 1.
-        seq_int_rep[:seq_tokens.shape[0]] = seq_tokens
-        # print(seq_int_rep.shape, y_true.shape)
-
-        terms = self.get_terms_representations(row["uniprot_id"])
-        return seq_int_rep, y_true, terms
+        return token_reps
 
 
-
-    def get_terms_representations(self, crnt_uniprot_id):
+    def get_terms_graph(self, crnt_uniprot_id):
+        # the pool excludes crnt_uniprot_id
         nodes = []
         for term, id in self.terms_dict.items():
             # print(term, id)
@@ -71,9 +82,7 @@ class SeqAssociationDataset(Dataset):
             term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprot_id) 
             # print(term_seq_features.shape)
             nodes.append(term_seq_features)
-
             # break
-
 
         data = {}
         data["nodes"] = torch.stack(nodes)
@@ -82,24 +91,29 @@ class SeqAssociationDataset(Dataset):
 
         return data    
     
+
     def get_term_seq_features(self, uniprotid_list, crnt_uniprot_id):
         uniprotid_list = list(filter((crnt_uniprot_id).__ne__, uniprotid_list)) # removing current uniprotid from seq-feature pool
         uniprotid_list = random.sample(uniprotid_list, self.n_samples)
         features = []
         for uniprotid in uniprotid_list:
-            uniprotid_seq_pair = [(uniprotid, self.seq_db_dict.get(uniprotid)["seq"][:self.max_len_of_a_seq])]
+            uniprotid_seq_pair = [(uniprotid, self.seq_db_dict.get(uniprotid)["seq"][:self.max_seq_len])]
             uniprotid, batch_strs, seq_tokens = self.esm1b_batch_converter(uniprotid_seq_pair)
 
-            seq_tokens = seq_tokens[0] #shape: [max_len_of_a_seq+1]
+            seq_tokens = seq_tokens[0] #shape: [max_seq_len+1]
 
             # the seq is padded with 1's by esm-1b
-            seq_int_rep = torch.ones(self.max_len_of_a_seq+1, dtype=torch.int32)
+            seq_int_rep = torch.ones(self.max_seq_len+1, dtype=torch.int32)
             seq_int_rep[:seq_tokens.shape[0]] = seq_tokens
 
-            features.append(seq_int_rep)
+            with torch.no_grad():
+                results = self.esm1b(seq_int_rep, repr_layers=[12], return_contacts=False)
+            seq_rep = results["representations"][12] #n_seq, max_seq_len, esm1b_embed_dim
+
+            features.append(seq_rep)
         
         features = torch.vstack(features)
-        # print(features.shape) # n_samples, max_len_of_a_seq+1
+        # print(features.shape) # n_samples, max_seq_len+1, esm1b_embed_dim
         return features
 
 
