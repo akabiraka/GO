@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, get_terms_dataset, get_class_weights, get_positive_class_weights
+from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights, get_positive_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import eval_metrics as eval_metrics
@@ -33,9 +33,9 @@ print("log: model loaded")
 
 
 # loading dataset
-# go_topo_data = get_terms_dataset(config.species, config.GO)
-train_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="train")
-val_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="val")
+terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
+train_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="train")
+val_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
 print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
@@ -46,8 +46,8 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 best_loss, best_f1 = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
-    train_loss = MultimodalTransformer.train(model, train_loader, criterion, optimizer, config.device)
-    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, criterion, config.device)
+    train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, criterion, optimizer, config.device)
+    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, terms_graph, criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 

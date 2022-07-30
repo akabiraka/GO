@@ -20,8 +20,8 @@ class Model(torch.nn.Module):
         
 
     def forward(self, term_nodes, terms_ancestors_rel_mat, seqs_reps):
-        """ term_nodes: [batch_size, n_nodes, max_seq_len, 768]
-            terms_ancestors_rel_mat: [batch_size, n_nodes, n_nodes]
+        """ term_nodes: [n_nodes, max_seq_len, 768]
+            terms_ancestors_rel_mat: [n_nodes, n_nodes]
             seq_rep: [batch_size, max_seq_len, 768]
         """
         seqs_reps = self.seq_projection_layer(seqs_reps) #[batch_size, embed_dim]
@@ -57,20 +57,17 @@ class TermEmbeddingLayer(torch.nn.Module):
         self.node_proj_layer = ProjectionLayer(config.embed_dim, config.embed_dim, config.dropout)
 
     def forward(self, x):
-        batch_size, n_nodes, n_samples, max_seq_len, esm1b_embed_dim = x.shape
-        batches = []
-        for i in range(batch_size):
-            nodes_rep = []
-            for j in range(n_nodes):
-                rep = self.seq_proj_layer(x[i, j]) # n_samples, embed_dim
-                # print(rep.shape)
-                nodes_rep.append(rep)
-            
-            nodes_rep = self.node_proj_layer(torch.stack(nodes_rep)) 
-            batches.append(nodes_rep)
+        n_nodes, n_samples, max_seq_len, esm1b_embed_dim = x.shape
+        
+        nodes = []
+        for j in range(n_nodes):
+            rep = self.seq_proj_layer(x[j]) # n_samples, embed_dim
+            # print(rep.shape)
+            nodes.append(rep)
+        
+        nodes = self.node_proj_layer(torch.stack(nodes)) 
 
-        batches = torch.stack(batches) #batch_size, n_nodes, embed_dim
-        return batches
+        return nodes
 
 
 
@@ -99,16 +96,19 @@ class ProjectionLayer(torch.nn.Module):
 
 
 
-def train(model, data_loader, criterion, optimizer, device):
+def train(model, data_loader, terms_graph, criterion, optimizer, device):
     model.train()
     train_loss = 0.0
 
-    for i, (seq_rep, terms_graph, y_true) in enumerate(data_loader):
-        y_true = y_true.to(device)
-        # print(y_true.shape)
+    for i, (uniprot_ids, seqs, y_true) in enumerate(data_loader):
+        seqs, y_true = seqs.to(device), y_true.to(device)
+        print(y_true.shape, seqs.shape, uniprot_ids)
+
+        graph = terms_graph.get(uniprot_ids)
+        terms, rel_mat = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), seq_rep.to(device))
+        y_pred = model(terms, rel_mat, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)
@@ -124,17 +124,20 @@ def train(model, data_loader, criterion, optimizer, device):
 
 
 @torch.no_grad()
-def val(model, data_loader, criterion, device):
+def val(model, data_loader, terms_graph, criterion, device):
     model.eval()
     val_loss = 0.0
     pred_scores, true_scores = [], []
 
-    for i, (seq_rep, terms_graph, y_true) in enumerate(data_loader):
-        y_true = y_true.to(device)
+    for i, (uniprot_ids, seqs, y_true) in enumerate(data_loader):
+        seqs, y_true = seqs.to(device), y_true.to(device)
         # print(y_true.shape)
 
+        graph = terms_graph.get(uniprot_ids)
+        terms, rel_mat = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device)
+
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), seq_rep.to(device))
+        y_pred = model(terms, rel_mat, seqs)
         
         # batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)

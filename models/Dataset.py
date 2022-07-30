@@ -10,26 +10,15 @@ from sklearn.utils.class_weight import compute_class_weight
 import random
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, n_samples_from_pool=5, max_seq_len=512, dataset="train") -> None:
+    def __init__(self, species, GO, max_seq_len=512, dataset="train") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
         self.max_seq_len = max_seq_len
-        self.n_samples = n_samples_from_pool
-
-
+        
         self.df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
-        self.seq_db_dict = Utils.load_pickle(f"data/uniprotkb/{species}.pkl")
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
         
-
-        self.dev_df = pd.read_csv(f"data/goa/{species}/dev_test_set_cutoff/{GO}/dev.csv")
-        self.GOid_vs_uniprotid_list_df = self.dev_df.groupby("GO_id")["uniprot_id"].apply(list).reset_index() # GO-id vs list of uniprotid
-        # GOid_vs_uniprotid_list_df["features"] = GOid_vs_uniprotid_list_df["uniprot_id"].map(lambda x: get_go_seq_features(x, crnt_uniprot_id))#random.sample(x, n_samples))
-        # print(GOid_vs_uniprotid_list_df.head())
-        self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
-        self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
-    
 
     def __len__(self):
         return self.df.shape[0]
@@ -41,7 +30,9 @@ class SeqAssociationDataset(Dataset):
             y_true[self.terms_dict[term]] = 1.
         return y_true
 
-
+    def get_seq_representation(self, uniprot_id):
+        seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep/{uniprot_id}.pkl") # shape: max_seq_len, esmb_embed_dim
+        return seq_rep
 
     def __getitem__(self, i):
         row = self.df.loc[i]
@@ -49,24 +40,37 @@ class SeqAssociationDataset(Dataset):
 
         y_true = self.generate_true_label(GO_terms) # shape: [n_terms]
         seq_rep = self.get_seq_representation(uniprot_id) # shape: [max_seq_len+1, esm1b_embed_dim]
-        terms_graph = self.get_terms_graph(uniprot_id) 
+        # terms_graph = self.get_terms_graph(uniprot_id) 
 
-        return seq_rep, terms_graph, y_true
-
-
-    def get_seq_representation(self, uniprot_id):
-        seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep/{uniprot_id}.pkl") # shape: max_seq_len, esmb_embed_dim
-        return seq_rep
+        return uniprot_id, seq_rep, y_true
 
 
-    def get_terms_graph(self, crnt_uniprot_id):
-        # the pool excludes crnt_uniprot_id
+    
+
+
+class TermsGraph(object):
+    def __init__(self, species, GO, n_samples_from_pool=5) -> None:
+        self.species = species
+        self.GO = GO
+        self.n_samples = n_samples_from_pool
+
+        self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+        self.dev_df = pd.read_csv(f"data/goa/{species}/dev_test_set_cutoff/{GO}/dev.csv")
+        self.GOid_vs_uniprotid_list_df = self.dev_df.groupby("GO_id")["uniprot_id"].apply(list).reset_index() # GO-id vs list of uniprotid
+        # GOid_vs_uniprotid_list_df["features"] = GOid_vs_uniprotid_list_df["uniprot_id"].map(lambda x: get_go_seq_features(x, crnt_uniprot_id))#random.sample(x, n_samples))
+        # print(GOid_vs_uniprotid_list_df.head())
+        self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
+        self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
+    
+
+    def get(self, crnt_uniprotid_list):
+        # the pool excludes crnt_uniprot_ids
         nodes = []
         for term, id in self.terms_dict.items():
             # print(term, id)
             uniprotid_list = self.GOid_vs_uniprotid_list_df[self.GOid_vs_uniprotid_list_df["GO_id"]==term]["uniprot_id"].item()
             
-            term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprot_id) 
+            term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprotid_list) 
             # print(term_seq_features.shape)
             nodes.append(term_seq_features)
             # break
@@ -77,10 +81,10 @@ class SeqAssociationDataset(Dataset):
         # data["children_rel_matrix"] = torch.tensor(self.terms_children, dtype=torch.float32)
 
         return data    
-    
 
-    def get_term_seq_features(self, uniprotid_list, crnt_uniprot_id):
-        uniprotid_list = list(filter((crnt_uniprot_id).__ne__, uniprotid_list)) # removing current uniprotid from seq-feature pool
+
+    def get_term_seq_features(self, uniprotid_list, crnt_uniprotid_list):
+        uniprotid_list = list(set(uniprotid_list) - set(crnt_uniprotid_list)) # removing current uniprotid from seq-feature pool
         uniprotid_list = random.sample(uniprotid_list, self.n_samples)
         features = []
         for uniprot_id in uniprotid_list:
@@ -93,10 +97,12 @@ class SeqAssociationDataset(Dataset):
 
 
 # sample usage
-# val_dataset = SeqAssociationDataset("yeast", "CC", dataset="val")
-# seq_rep, terms_graph, y_true = val_dataset.__getitem__(0)
-# print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
-# torch.Size([513, 768]) torch.Size([244]) torch.Size([244, 5, 513, 768]) torch.Size([244, 244])
+val_dataset = SeqAssociationDataset("yeast", "CC", max_seq_len=512, dataset="val")
+uniprot_id, seq_rep, y_true = val_dataset.__getitem__(0)
+print(uniprot_id, seq_rep.shape, y_true.shape) # ie: P25639 torch.Size([513, 768]) torch.Size([244])
+
+terms_graph = TermsGraph("yeast", "CC", n_samples_from_pool=5).get([])
+print(terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
 
 
 

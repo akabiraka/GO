@@ -27,7 +27,7 @@
 ##--------------GPU jobs------------------
 #SBATCH --partition=gpuq
 #SBATCH --gres=gpu:1
-#SBATCH --mem=32G                               # for CPU mem allocation
+#SBATCH --mem=64000                               # for CPU mem allocation
 ##SBATCH --nodes=1                            # Request N nodes
 ##SBATCH --ntasks-per-node=8                  # Request n   cores per node
 
