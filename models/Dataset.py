@@ -30,7 +30,6 @@ class SeqAssociationDataset(Dataset):
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
         self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
     
-        print("log: Dataset object created")
 
     def __len__(self):
         return self.df.shape[0]
@@ -45,16 +44,12 @@ class SeqAssociationDataset(Dataset):
 
 
     def __getitem__(self, i):
-        print("log: getting item")
         row = self.df.loc[i]
-        uniprotid_seq, GO_terms = [(row["uniprot_id"], self.seq_db_dict.get(row["uniprot_id"])["seq"][:self.max_seq_len])], row["GO_id"]
-        print(uniprotid_seq)
+        uniprot_id, GO_terms = row["uniprot_id"], row["GO_id"]
 
         y_true = self.generate_true_label(GO_terms) # shape: [n_terms]
-        print(y_true.shape)
-        seq_rep = self.get_seq_representation(uniprotid_seq) # shape: [max_seq_len+1, esm1b_embed_dim]
-        print(seq_rep.shape)
-        terms_graph = self.get_terms_graph(row["uniprot_id"]) 
+        seq_rep = self.get_seq_representation(uniprot_id) # shape: [max_seq_len+1, esm1b_embed_dim]
+        terms_graph = self.get_terms_graph(uniprot_id) 
 
         return seq_rep, terms_graph, y_true
 
@@ -68,7 +63,7 @@ class SeqAssociationDataset(Dataset):
         # the pool excludes crnt_uniprot_id
         nodes = []
         for term, id in self.terms_dict.items():
-            print(term, id)
+            # print(term, id)
             uniprotid_list = self.GOid_vs_uniprotid_list_df[self.GOid_vs_uniprotid_list_df["GO_id"]==term]["uniprot_id"].item()
             
             term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprot_id) 
@@ -92,34 +87,37 @@ class SeqAssociationDataset(Dataset):
             seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep/{uniprot_id}.pkl") # shape: max_seq_len, esmb_embed_dim
             features.append(seq_rep)
         
-        features = torch.vstack(features)
+        features = torch.stack(features)
         # print(features.shape) # n_samples, max_seq_len+1, esm1b_embed_dim
         return features
 
 
 # sample usage
-val_dataset = SeqAssociationDataset("yeast", "CC", dataset="val")
-seq_rep, terms_graph, y_true = val_dataset.__getitem__(0)
-print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape, terms_graph["children_rel_matrix"].shape)
+# val_dataset = SeqAssociationDataset("yeast", "CC", dataset="val")
+# seq_rep, terms_graph, y_true = val_dataset.__getitem__(0)
+# print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
+# torch.Size([513, 768]) torch.Size([244]) torch.Size([244, 5, 513, 768]) torch.Size([244, 244])
 
 
-def get_terms_dataset(species, GO):
-    GO_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
 
-    data = {}
-    data["nodes"] = torch.tensor(list(GO_dict.values())) # node embeddings from 0 to vocab_size-1
+# deprecated
+# def get_terms_dataset(species, GO):
+#     GO_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+
+#     data = {}
+#     data["nodes"] = torch.tensor(list(GO_dict.values())) # node embeddings from 0 to vocab_size-1
     
-    ancestors = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_ancestors.pkl")
-    data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(ancestors, dtype=torch.bool))
+#     ancestors = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_ancestors.pkl")
+#     data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(ancestors, dtype=torch.bool))
 
-    children = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
-    data["children_rel_matrix"] = torch.tensor(children, dtype=torch.float32)
+#     children = Utils.load_pickle(f"data/goa/{species}/studied_GO_terms_relation_matrix/{GO}_children.pkl")
+#     data["children_rel_matrix"] = torch.tensor(children, dtype=torch.float32)
 
 
-    print(f"#-terms: {data['nodes'].shape}")
-    print(f"ancestors_rel_matrix: {data['ancestors_rel_matrix'].shape}")
-    print(f"children_rel_matrix: {data['children_rel_matrix'].shape}")
-    return data
+#     print(f"#-terms: {data['nodes'].shape}")
+#     print(f"ancestors_rel_matrix: {data['ancestors_rel_matrix'].shape}")
+#     print(f"children_rel_matrix: {data['children_rel_matrix'].shape}")
+#     return data
 
     
 

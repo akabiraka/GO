@@ -1,10 +1,8 @@
 import sys
-from turtle import forward
 sys.path.append("../GO")
 import numpy as np
 import torch
 import torch.nn.functional as F
-import esm
 from transformer.config import Config
 from transformer.factory import build_transformer_model
 

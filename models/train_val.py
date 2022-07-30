@@ -29,14 +29,12 @@ class_weights = get_class_weights(config.species, config.GO).to(config.device)
 criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
-
+print("log: model loaded")
 
 
 # loading dataset
 # go_topo_data = get_terms_dataset(config.species, config.GO)
 train_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="train")
-seq_rep, terms_graph, y_true = train_dataset.__getitem__(0)
-print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
 val_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
