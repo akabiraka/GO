@@ -36,7 +36,7 @@ writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 # go_topo_data = get_terms_dataset(config.species, config.GO)
 train_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="train")
 seq_rep, terms_graph, y_true = train_dataset.__getitem__(0)
-print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape, terms_graph["children_rel_matrix"].shape)
+print(seq_rep.shape, y_true.shape, terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
 val_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
@@ -53,15 +53,15 @@ for epoch in range(1, config.n_epochs+1):
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    # micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
-    micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
-    micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
+    micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
+    # micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
+    # micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
     # fmax = eval_metrics.Fmax(true_scores, pred_scores)
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
     writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
-    writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
+    # writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
     # writer.add_scalar('Fmax', fmax, epoch)
 
     # save model dict based on loss

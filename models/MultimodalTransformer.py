@@ -21,10 +21,9 @@ class Model(torch.nn.Module):
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
         
 
-    def forward(self, term_nodes, terms_ancestors_rel_mat, terms_children_rel_mat, seqs_reps):
+    def forward(self, term_nodes, terms_ancestors_rel_mat, seqs_reps):
         """ term_nodes: [batch_size, n_nodes, max_seq_len, 768]
             terms_ancestors_rel_mat: [batch_size, n_nodes, n_nodes]
-            terms_children_rel_mat: [batch_size, n_nodes, n_nodes]
             seq_rep: [batch_size, max_seq_len, 768]
         """
         seqs_reps = self.seq_projection_layer(seqs_reps) #[batch_size, embed_dim]
@@ -34,7 +33,7 @@ class Model(torch.nn.Module):
         terms_reps = self.GOTopoTransformer(x=term_nodes, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
         print(f"terms_reps: {terms_reps.shape}")
         
-        scores = self.prediction_refinement_layer(seqs_reps, terms_reps, terms_children_rel_mat)
+        scores = self.prediction_refinement_layer(seqs_reps, terms_reps)
         return scores
 
 
@@ -45,9 +44,8 @@ class PredictionRefinementLayer(torch.nn.Module):
         self.dropout = dropout
         # self.w1 = torch.nn.Linear(inp_embed_dim, out_embed_dim)
 
-    def forward(self, seqs_reps, terms_reps, terms_children_rel_mat):
+    def forward(self, seqs_reps, terms_reps):
         scores = seqs_reps.matmul(terms_reps.t()) # shape: n_seqs, n_terms
-        # scores = scores.matmul(terms_children_rel_mat.t())
         # scores = self.w1(scores)
 
         return scores
@@ -112,7 +110,7 @@ def train(model, data_loader, criterion, optimizer, device):
         # print(y_true.shape)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), terms_graph["children_rel_matrix"].to(device), seq_rep.to(device))
+        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), seq_rep.to(device))
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)
@@ -138,7 +136,7 @@ def val(model, data_loader, criterion, device):
         # print(y_true.shape)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), terms_graph["children_rel_matrix"].to(device), seq_rep.to(device))
+        y_pred = model(terms_graph["nodes"].to(device), terms_graph["ancestors_rel_matrix"].to(device), seq_rep.to(device))
         
         # batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) 
         batch_loss = criterion(y_pred, y_true)
