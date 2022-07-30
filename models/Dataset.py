@@ -97,12 +97,12 @@ class TermsGraph(object):
 
 
 # sample usage
-val_dataset = SeqAssociationDataset("yeast", "CC", max_seq_len=512, dataset="val")
-uniprot_id, seq_rep, y_true = val_dataset.__getitem__(0)
-print(uniprot_id, seq_rep.shape, y_true.shape) # ie: P25639 torch.Size([513, 768]) torch.Size([244])
+# val_dataset = SeqAssociationDataset("yeast", "CC", max_seq_len=512, dataset="val")
+# uniprot_id, seq_rep, y_true = val_dataset.__getitem__(0)
+# print(uniprot_id, seq_rep.shape, y_true.shape) # ie: P25639 torch.Size([513, 768]) torch.Size([244])
 
-terms_graph = TermsGraph("yeast", "CC", n_samples_from_pool=5).get([])
-print(terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
+# terms_graph = TermsGraph("yeast", "CC", n_samples_from_pool=5).get([])
+# print(terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
 
 
 

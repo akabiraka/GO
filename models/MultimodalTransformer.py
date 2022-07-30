@@ -19,19 +19,19 @@ class Model(torch.nn.Module):
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
         
 
-    def forward(self, term_nodes, terms_ancestors_rel_mat, seqs_reps):
+    def forward(self, terms, terms_ancestors_rel_mat, seqs):
         """ term_nodes: [n_nodes, max_seq_len, 768]
             terms_ancestors_rel_mat: [n_nodes, n_nodes]
-            seq_rep: [batch_size, max_seq_len, 768]
+            seqs: [batch_size, max_seq_len, 768]
         """
-        seqs_reps = self.seq_projection_layer(seqs_reps) #[batch_size, embed_dim]
-        print(f"seqs_reps: {seqs_reps.shape}")
+        seqs = self.seq_projection_layer(seqs) #[batch_size, embed_dim]
+        print(f"seqs_reps: {seqs.shape}")
         
-        terms_reps = self.term_embedding_layer(x=term_nodes)
-        terms_reps = self.GOTopoTransformer(x=term_nodes, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
-        print(f"terms_reps: {terms_reps.shape}")
+        terms = self.term_embedding_layer(x=terms)
+        terms = self.GOTopoTransformer(x=terms, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
+        print(f"terms_reps: {terms.shape}")
         
-        scores = self.prediction_refinement_layer(seqs_reps, terms_reps)
+        scores = self.prediction_refinement_layer(seqs, terms)
         return scores
 
 
