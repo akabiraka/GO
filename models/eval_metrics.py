@@ -158,15 +158,10 @@ def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_ter
 
 
 def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):
-    best_micro_avg_f1 = 0.0
-    for t in range(1, 101):
-        decision_th = t/100
-        pred_scores = np.where(pred_scores>decision_th, 1, 0)
-        micro_avg_f1 = metrics.f1_score(true_scores, pred_scores, average="micro")
-        if micro_avg_f1 > best_micro_avg_f1:
-            best_micro_avg_f1 = micro_avg_f1
-    print(f"    FmMicroAvgF1: {best_micro_avg_f1:0.4f} at decision_th: {decision_th}")
-    return best_micro_avg_f1
+    pred_labels = np.where(pred_scores > 0.5, 1, 0)
+    micro_avg_f1 = metrics.f1_score(true_scores, pred_labels, average="micro")
+    print(f"    FmMicroAvgF1: {micro_avg_f1:0.4f}")
+    return micro_avg_f1
 
 
 

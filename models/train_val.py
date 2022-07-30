@@ -53,15 +53,15 @@ for epoch in range(1, config.n_epochs+1):
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
-    # micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
-    # micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
+    # micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
+    micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
+    micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
     # fmax = eval_metrics.Fmax(true_scores, pred_scores)
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
     writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
-    # writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
+    writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
     # writer.add_scalar('Fmax', fmax, epoch)
 
     # save model dict based on loss
