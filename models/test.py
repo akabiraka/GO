@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 torch.cuda.empty_cache()
 
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, get_terms_dataset, get_class_weights
+from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import utils as Utils
@@ -29,10 +29,11 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 
 # loading dataset
-test_dataset = SeqAssociationDataset(config.species, config.GO, config.n_samples_from_pool, config.max_len_of_a_seq, dataset="test")
+terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
+test_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="test")
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 
-test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, criterion, config.device)
+test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, terms_graph, criterion, config.device)
 Utils.save_as_pickle(true_scores, f"outputs/predictions/{out_filename}_true_scores.pkl")
 Utils.save_as_pickle(pred_scores, f"outputs/predictions/{out_filename}_pred_scores.pkl")

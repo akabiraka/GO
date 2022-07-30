@@ -7,6 +7,7 @@ torch.cuda.empty_cache()
 from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
+import pandas as pd
 from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights, get_positive_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
@@ -43,7 +44,6 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 
 
-
 best_loss, best_f1 = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, criterion, optimizer, config.device)
@@ -51,16 +51,17 @@ for epoch in range(1, config.n_epochs+1):
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
+    tmax, fmax, smin, aupr = eval_metrics.Fmax_Smin_AUPR(pred_scores)
+    # micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
     # micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
     # micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
     # fmax = eval_metrics.Fmax(true_scores, pred_scores)
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
-    writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
+    # writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
     # writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
-    # writer.add_scalar('Fmax', fmax, epoch)
+    writer.add_scalar('Fmax', fmax, epoch)
 
     # save model dict based on loss
     if val_loss < best_loss:
@@ -71,8 +72,8 @@ for epoch in range(1, config.n_epochs+1):
 
 
     # save model dict based on performance
-    if micro_avg_f1 < best_f1:
-        best_f1 = micro_avg_f1
+    if fmax < best_f1:
+        best_fmax = fmax
         torch.save({'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     }, f"outputs/models/{out_filename}_pref.pth")

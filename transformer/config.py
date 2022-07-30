@@ -18,7 +18,7 @@ class Config(object):
                  max_len_of_a_seq=512, 
                  embed_dim=256,
                  n_samples_from_pool=5, 
-                 n_encoder_layers=5, 
+                 n_encoder_layers=3, 
                  n_attn_heads=8, 
                  dropout=0.3,
                  add_node_embed_layer=False, 

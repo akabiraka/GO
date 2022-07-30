@@ -11,12 +11,27 @@ import matplotlib.pyplot as plt
 from transformer.config import Config
 
 config = Config()
+dataset = "val"
 
 # for evaluation purposes
 go_rels = Ontology('data/downloads/go.obo', with_rels=True)
 term_to_idx_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_to_index_dicts/{config.GO}.pkl")
 idx_to_term_dict = {i:term for term, i in term_to_idx_dict.items()}
 terms_set = set(term_to_idx_dict.keys())
+
+train_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl")
+train_annotations = train_df['GO_id'].values
+train_annotations = list(map(lambda x: set(x), train_annotations))
+print("Length of train set: " + str(len(train_df)))
+
+test_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{dataset}.pkl")
+test_annotations = test_df['GO_id'].values
+test_annotations = list(map(lambda x: set(x), test_annotations))
+print("Length of evaluation set: " + str(len(test_df)))
+
+go_rels = Ontology('data/downloads/go.obo', with_rels=True)
+go_rels.calculate_ic(train_annotations + test_annotations)
+print("Log: finished computing ic")
 
 
 def evaluate_annotations(go, real_annots, pred_annots):
@@ -63,21 +78,7 @@ def evaluate_annotations(go, real_annots, pred_annots):
 
 
 
-def Fmax_Smin_AUPR(pred_scores, eval_dataset="test"):
-
-    train_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl")
-    train_annotations = train_df['GO_id'].values
-    train_annotations = list(map(lambda x: set(x), train_annotations))
-    print("Length of train set: " + str(len(train_df)))
-
-    test_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{eval_dataset}.pkl")
-    test_annotations = test_df['GO_id'].values
-    test_annotations = list(map(lambda x: set(x), test_annotations))
-    print("Length of evaluation set: " + str(len(test_df)))
-
-    go_rels.calculate_ic(train_annotations + test_annotations)
-    print("Log: finished computing ic")
-
+def Fmax_Smin_AUPR(pred_scores):
     # pred_scores = np.random.rand(869, 244)
     fmax = 0.0
     tmax = 0.0
@@ -98,7 +99,7 @@ def Fmax_Smin_AUPR(pred_scores, eval_dataset="test"):
                 ancestors = go_rels.get_anchestors(go_id)
                 ancestors = set(ancestors).intersection(terms_set) # taking ancestors only in the studied terms
                 new_annots = new_annots | ancestors # set union
-            preds.append(new_annots)
+            preds.append(new_annots) # list of sets
 
         fscore, prec, rec, s, ru, mi, fps, fns = evaluate_annotations(go_rels, test_annotations, preds)
         
@@ -122,7 +123,6 @@ def Fmax_Smin_AUPR(pred_scores, eval_dataset="test"):
     precisions = precisions[sorted_index]
     aupr = np.trapz(precisions, recalls)
     print(f'    AUPR: {aupr:0.4f}')
-
     
     return tmax, fmax, smin, aupr
 
