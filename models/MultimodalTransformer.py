@@ -25,11 +25,11 @@ class Model(torch.nn.Module):
             seqs: [batch_size, max_seq_len, 768]
         """
         seqs = self.seq_projection_layer(seqs) #[batch_size, embed_dim]
-        print(f"seqs_reps: {seqs.shape}")
+        # print(f"seqs_reps: {seqs.shape}")
         
         terms = self.term_embedding_layer(x=terms)
         terms = self.GOTopoTransformer(x=terms, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
-        print(f"terms_reps: {terms.shape}")
+        # print(f"terms_reps: {terms.shape}")
         
         scores = self.prediction_refinement_layer(seqs, terms)
         return scores
@@ -102,7 +102,7 @@ def train(model, data_loader, terms_graph, criterion, optimizer, device):
 
     for i, (uniprot_ids, seqs, y_true) in enumerate(data_loader):
         seqs, y_true = seqs.to(device), y_true.to(device)
-        print(y_true.shape, seqs.shape, uniprot_ids)
+        # print(y_true.shape, seqs.shape, uniprot_ids)
 
         graph = terms_graph.get(uniprot_ids)
         terms, rel_mat = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device)
@@ -118,7 +118,7 @@ def train(model, data_loader, terms_graph, criterion, optimizer, device):
         
         train_loss = train_loss + batch_loss.item()
         print(f"    train batch: {i}, loss: {batch_loss.item()}")
-        break
+        # break
     return train_loss/len(data_loader)
 
 
@@ -148,7 +148,7 @@ def val(model, data_loader, terms_graph, criterion, device):
         true_scores.append(y_true.detach().cpu().numpy())
 
         # print(f"    val batch: {i}, loss: {batch_loss.item()}")
-        break
+        # break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
     return val_loss/len(data_loader), true_scores, pred_scores
 
