@@ -14,7 +14,7 @@ class Model(torch.nn.Module):
         self.GOTopoTransformer = build_transformer_model(config=config, decoder=None) # returns only node embeddings
         self.term_embedding_layer = TermEmbeddingLayer(config)
 
-        self.seq_projection_layer = ProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
+        self.seq_projection_layer = SeqProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
 
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
         
@@ -22,7 +22,7 @@ class Model(torch.nn.Module):
     def forward(self, terms, terms_ancestors_rel_mat, seqs):
         """ term_nodes: [n_nodes, n_samples, 768]
             terms_ancestors_rel_mat: [n_nodes, n_nodes]
-            seqs: [batch_size, max_seq_len, 768]
+            seqs: [batch_size, 768]
         """
         seqs = self.seq_projection_layer(seqs) #[batch_size, embed_dim]
         # print(f"seqs_reps: {seqs.shape}")
@@ -92,7 +92,14 @@ class ProjectionLayer(torch.nn.Module):
 
 
 
+class SeqProjectionLayer(torch.nn.Module):
+    def __init__(self, inp_embed_dim, out_embed_dim, dropout_p=0.3) -> None:
+        super(SeqProjectionLayer, self).__init__()
+        self.dropout_p = dropout_p
+        self.projection = torch.nn.Linear(inp_embed_dim, out_embed_dim)
 
+    def forward(self, x):
+        return F.dropout(F.relu(self.projection(x)), self.dropout_p)
 
 
 def train(model, data_loader, terms_graph, criterion, optimizer, device):
