@@ -50,7 +50,7 @@ class Config(object):
         self.add_positional_encoding_layer = add_positional_encoding_layer
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
-        self.emsb_embed_dim = 768
+        self.esm1b_embed_dim = 768
         
 
     def get_model_name(self, task="Modelv9") -> str:

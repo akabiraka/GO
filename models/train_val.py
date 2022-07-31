@@ -7,14 +7,11 @@ torch.cuda.empty_cache()
 from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
-import pandas as pd
 from transformer.config import Config
 from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights, get_positive_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import eval_metrics as eval_metrics
-import utils as Utils
-from data_preprocess.GO import Ontology
 
 
 config = Config()
@@ -35,10 +32,10 @@ print("log: model loaded")
 
 # loading dataset
 terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
-train_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="train")
-val_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="val")
+train_dataset = SeqAssociationDataset(config.species, config.GO, dataset="train")
+val_dataset = SeqAssociationDataset(config.species, config.GO, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
+val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
 print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 

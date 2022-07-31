@@ -30,7 +30,7 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 # loading dataset
 terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
-test_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="test")
+test_dataset = SeqAssociationDataset(config.species, config.GO, dataset="test")
 test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
 
 

@@ -14,20 +14,20 @@ class Model(torch.nn.Module):
         self.GOTopoTransformer = build_transformer_model(config=config, decoder=None) # returns only node embeddings
         self.term_embedding_layer = TermEmbeddingLayer(config)
 
-        self.seq_projection_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim, config.dropout)
+        self.seq_projection_layer = ProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
 
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
         
 
     def forward(self, terms, terms_ancestors_rel_mat, seqs):
-        """ term_nodes: [n_nodes, max_seq_len, 768]
+        """ term_nodes: [n_nodes, n_samples, 768]
             terms_ancestors_rel_mat: [n_nodes, n_nodes]
             seqs: [batch_size, max_seq_len, 768]
         """
         seqs = self.seq_projection_layer(seqs) #[batch_size, embed_dim]
         # print(f"seqs_reps: {seqs.shape}")
         
-        terms = self.term_embedding_layer(x=terms)
+        terms = self.term_embedding_layer(x=terms) # shape: [n_nodes, embed_dim]
         terms = self.GOTopoTransformer(x=terms, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
         # print(f"terms_reps: {terms.shape}")
         
@@ -53,21 +53,20 @@ class PredictionRefinementLayer(torch.nn.Module):
 class TermEmbeddingLayer(torch.nn.Module):
     def __init__(self, config:Config) -> None:
         super(TermEmbeddingLayer, self).__init__()
-        self.seq_proj_layer = ProjectionLayer(config.emsb_embed_dim, config.embed_dim, config.dropout)
-        self.node_proj_layer = ProjectionLayer(config.embed_dim, config.embed_dim, config.dropout)
+        self.node_proj_layer = ProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
 
     def forward(self, x):
-        n_nodes, n_samples, max_seq_len, esm1b_embed_dim = x.shape
+        n_nodes, n_samples, esm1b_embed_dim = x.shape
         
         nodes = []
         for j in range(n_nodes):
-            rep = self.seq_proj_layer(x[j]) # n_samples, embed_dim
+            rep = self.node_proj_layer(x[j]) # n_samples, embed_dim
             # print(rep.shape)
             nodes.append(rep)
         
-        nodes = self.node_proj_layer(torch.stack(nodes)) 
+        nodes = torch.stack(nodes)
 
-        return nodes
+        return nodes # shape: [n_nodes, embed_dim]
 
 
 

@@ -10,11 +10,10 @@ from sklearn.utils.class_weight import compute_class_weight
 import random
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, max_seq_len=512, dataset="train") -> None:
+    def __init__(self, species, GO, dataset="train") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
-        self.max_seq_len = max_seq_len
         
         self.df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
@@ -31,7 +30,7 @@ class SeqAssociationDataset(Dataset):
         return y_true
 
     def get_seq_representation(self, uniprot_id):
-        seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep/{uniprot_id}.pkl") # shape: max_seq_len, esmb_embed_dim
+        seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep_mean/{uniprot_id}.pkl") # shape: [esm1b_embed_dim]
         return seq_rep
 
     def __getitem__(self, i):
@@ -39,8 +38,7 @@ class SeqAssociationDataset(Dataset):
         uniprot_id, GO_terms = row["uniprot_id"], row["GO_id"]
 
         y_true = self.generate_true_label(GO_terms) # shape: [n_terms]
-        seq_rep = self.get_seq_representation(uniprot_id) # shape: [max_seq_len+1, esm1b_embed_dim]
-        # terms_graph = self.get_terms_graph(uniprot_id) 
+        seq_rep = self.get_seq_representation(uniprot_id) # shape: [esm1b_embed_dim]
 
         return uniprot_id, seq_rep, y_true
 
@@ -60,7 +58,7 @@ class TermsGraph(object):
         # GOid_vs_uniprotid_list_df["features"] = GOid_vs_uniprotid_list_df["uniprot_id"].map(lambda x: get_go_seq_features(x, crnt_uniprot_id))#random.sample(x, n_samples))
         # print(GOid_vs_uniprotid_list_df.head())
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
-        self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
+        # self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
     
 
     def get(self, crnt_uniprotid_list):
@@ -70,7 +68,7 @@ class TermsGraph(object):
             # print(term, id)
             uniprotid_list = self.GOid_vs_uniprotid_list_df[self.GOid_vs_uniprotid_list_df["GO_id"]==term]["uniprot_id"].item()
             
-            term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprotid_list) 
+            term_seq_features = self.get_term_seq_features(uniprotid_list, crnt_uniprotid_list) # shape: [n_samples, esm1b_embed_dim]
             # print(term_seq_features.shape)
             nodes.append(term_seq_features)
             # break
@@ -88,21 +86,21 @@ class TermsGraph(object):
         uniprotid_list = random.sample(uniprotid_list, self.n_samples)
         features = []
         for uniprot_id in uniprotid_list:
-            seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep/{uniprot_id}.pkl") # shape: max_seq_len, esmb_embed_dim
+            seq_rep = Utils.load_pickle(f"data/uniprotkb/{self.species}_sequences_rep_mean/{uniprot_id}.pkl") # shape: [esmb_embed_dim]
             features.append(seq_rep)
         
         features = torch.stack(features)
-        # print(features.shape) # n_samples, max_seq_len+1, esm1b_embed_dim
+        # print(features.shape) # shape: [n_samples, esm1b_embed_dim]
         return features
 
 
 # sample usage
-# val_dataset = SeqAssociationDataset("yeast", "CC", max_seq_len=512, dataset="val")
-# uniprot_id, seq_rep, y_true = val_dataset.__getitem__(0)
-# print(uniprot_id, seq_rep.shape, y_true.shape) # ie: P25639 torch.Size([513, 768]) torch.Size([244])
+val_dataset = SeqAssociationDataset("yeast", "CC", max_seq_len=512, dataset="val")
+uniprot_id, seq_rep, y_true = val_dataset.__getitem__(0)
+print(uniprot_id, seq_rep.shape, y_true.shape) # ie: P25639 torch.Size([513, 768]) torch.Size([244])
 
-# terms_graph = TermsGraph("yeast", "CC", n_samples_from_pool=5).get([])
-# print(terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
+terms_graph = TermsGraph("yeast", "CC", n_samples_from_pool=5).get([])
+print(terms_graph["nodes"].shape, terms_graph["ancestors_rel_matrix"].shape)
 
 
 
