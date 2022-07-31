@@ -38,7 +38,7 @@ terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
 train_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="train")
 val_dataset = SeqAssociationDataset(config.species, config.GO, config.max_len_of_a_seq, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False)
+val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 

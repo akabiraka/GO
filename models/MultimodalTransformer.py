@@ -118,7 +118,7 @@ def train(model, data_loader, terms_graph, criterion, optimizer, device):
         
         train_loss = train_loss + batch_loss.item()
         print(f"    train batch: {i}, loss: {batch_loss.item()}")
-        break
+        #break
     return train_loss/len(data_loader)
 
 
@@ -147,10 +147,10 @@ def val(model, data_loader, terms_graph, criterion, device):
         pred_scores.append(torch.sigmoid(y_pred).detach().cpu().numpy())
         true_scores.append(y_true.detach().cpu().numpy())
 
-        print(f"    val batch: {i}, loss: {batch_loss.item()}")
-        # break
+        #print(f"    val batch: {i}, loss: {batch_loss.item()}")
+        #if i==5: break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
-    print(true_scores, pred_scores)
+    #print(true_scores.shape, pred_scores.shape)
     return val_loss/len(data_loader), true_scores, pred_scores
 
 
