@@ -7,12 +7,12 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 ##--------------CPU jobs------------------
-#SBATCH --partition=all-LoPri
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32000MB
+##SBATCH --partition=all-LoPri
+##SBATCH --cpus-per-task=4
+##SBATCH --mem=32000MB
 
 ##python data_preprocess/compute_GO_terms_topo_matrix.py.py
-python data_preprocess/compute_seq_rep_using_esm1b.py
+##python data_preprocess/compute_seq_rep_using_esm1b.py
 
 
 ##--------------CPU array jobs------------------
@@ -25,15 +25,15 @@ python data_preprocess/compute_seq_rep_using_esm1b.py
 
 
 ##--------------GPU jobs------------------
-##SBATCH --partition=gpuq
-##SBATCH --gres=gpu:1
-##SBATCH --mem=32G                               # for CPU mem allocation
+#SBATCH --partition=gpuq
+#SBATCH --gres=gpu:1
+#SBATCH --mem=32G                               # for CPU mem allocation
 ##SBATCH --nodes=1                            # Request N nodes
 ##SBATCH --ntasks-per-node=8                  # Request n   cores per node
 
 
 ##nvidia-smi
-##python models/train_val.py
+python models/train_val.py
 
 ##python models/test.py
 ##python models/eval_pred_scores.py

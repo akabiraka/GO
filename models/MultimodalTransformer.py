@@ -56,15 +56,17 @@ class TermEmbeddingLayer(torch.nn.Module):
         self.node_proj_layer = ProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
 
     def forward(self, x):
-        n_nodes, n_samples, esm1b_embed_dim = x.shape
+        #n_nodes, n_samples, esm1b_embed_dim = x.shape
         
-        nodes = []
-        for j in range(n_nodes):
-            rep = self.node_proj_layer(x[j]) # n_samples, embed_dim
-            # print(rep.shape)
-            nodes.append(rep)
-        
-        nodes = torch.stack(nodes)
+        #nodes = []
+        #for j in range(n_nodes):
+        #    rep = self.node_proj_layer(x[j]) # n_samples, embed_dim
+        #    # print(rep.shape)
+        #    nodes.append(rep)
+        #
+        #nodes = torch.stack(nodes)
+        nodes = self.node_proj_layer(x)
+        #print(nodes.shape)
 
         return nodes # shape: [n_nodes, embed_dim]
 
@@ -124,7 +126,7 @@ def train(model, data_loader, terms_graph, criterion, optimizer, device):
         
         train_loss = train_loss + batch_loss.item()
         print(f"    train batch: {i}, loss: {batch_loss.item()}")
-        #break
+        # break
     return train_loss/len(data_loader)
 
 
@@ -153,10 +155,10 @@ def val(model, data_loader, terms_graph, criterion, device):
         pred_scores.append(torch.sigmoid(y_pred).detach().cpu().numpy())
         true_scores.append(y_true.detach().cpu().numpy())
 
-        #print(f"    val batch: {i}, loss: {batch_loss.item()}")
-        #if i==5: break
+        print(f"    val batch: {i}, loss: {batch_loss.item()}")
+        # if i==5: break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
-    #print(true_scores.shape, pred_scores.shape)
+    # print(true_scores.shape, pred_scores.shape)
     return val_loss/len(data_loader), true_scores, pred_scores
 
 
