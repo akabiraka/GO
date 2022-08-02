@@ -59,6 +59,7 @@ class TermsGraph(object):
         # print(GOid_vs_uniprotid_list_df.head())
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
         # self.terms_children = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_children.pkl")
+        self.terms_adjacency = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_adjacency.pkl")
     
 
     def get(self, crnt_uniprotid_list):
@@ -76,6 +77,7 @@ class TermsGraph(object):
         data = {}
         data["nodes"] = torch.stack(nodes)
         data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
+        data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
         # data["children_rel_matrix"] = torch.tensor(self.terms_children, dtype=torch.float32)
 
         return data    

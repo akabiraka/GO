@@ -24,7 +24,8 @@ print(out_filename)
 model = MultimodalTransformer.Model(config=config).to(config.device)
 class_weights = get_class_weights(config.species, config.GO).to(config.device)
 # pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
-criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
+label_pred_criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
+graph_recon_criterion = torch.nn.BCEWithLogitsLoss()
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 print("log: model loaded")
@@ -43,8 +44,8 @@ print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 best_loss, best_f1 = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
-    train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, criterion, optimizer, config.device)
-    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, terms_graph, criterion, config.device)
+    train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, label_pred_criterion, graph_recon_criterion, optimizer, config.device)
+    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, terms_graph, label_pred_criterion, graph_recon_criterion, config.device)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 

@@ -17,6 +17,7 @@ class Model(torch.nn.Module):
         self.seq_projection_layer = SeqProjectionLayer(config.esm1b_embed_dim, config.embed_dim, config.dropout)
 
         self.prediction_refinement_layer = PredictionRefinementLayer(config.vocab_size, config.vocab_size, config.dropout)
+        self.adj_prediction_layer = AdjMatPredictionLayer()
         
 
     def forward(self, terms, terms_ancestors_rel_mat, seqs):
@@ -32,7 +33,8 @@ class Model(torch.nn.Module):
         # print(f"terms_reps: {terms.shape}")
         
         scores = self.prediction_refinement_layer(seqs, terms)
-        return scores
+        adj = self.adj_prediction_layer(terms)
+        return scores, adj
 
 
 
@@ -47,6 +49,15 @@ class PredictionRefinementLayer(torch.nn.Module):
         # scores = self.w1(scores)
 
         return scores
+
+class AdjMatPredictionLayer(torch.nn.Module):
+    def __init__(self) -> None:
+        super(AdjMatPredictionLayer, self).__init__()
+
+    def forward(self, nodes):
+        adj = nodes.matmul(nodes.t())
+        print(adj.shape)
+        return adj
 
 
 
@@ -104,7 +115,7 @@ class SeqProjectionLayer(torch.nn.Module):
         return F.dropout(F.relu(self.projection(x)), self.dropout_p)
 
 
-def train(model, data_loader, terms_graph, criterion, optimizer, device):
+def train(model, data_loader, terms_graph, label_pred_criterion, graph_recon_criterion, optimizer, device):
     model.train()
     train_loss = 0.0
 
@@ -113,26 +124,29 @@ def train(model, data_loader, terms_graph, criterion, optimizer, device):
         # print(y_true.shape, seqs.shape, uniprot_ids)
 
         graph = terms_graph.get(uniprot_ids)
-        terms, rel_mat = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device)
+        terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, rel_mat, seqs)
+        y_pred, adj_pred = model(terms, ancestors_rel_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
-        batch_loss = criterion(y_pred, y_true)
+        label_pred_batch_loss = label_pred_criterion(y_pred, y_true)
+        adj_recon_loss = graph_recon_criterion(adj_pred, adj_matrix)
 
-        batch_loss.backward()
+        loss = label_pred_batch_loss + adj_recon_loss
+
+        loss.backward()
         optimizer.step()
         
-        train_loss = train_loss + batch_loss.item()
-        print(f"    train batch: {i}, loss: {batch_loss.item()}")
-        # break
+        train_loss = train_loss + loss.item()
+        print(f"    train batch: {i}, loss: {loss.item()}")
+        if i==5: break
     return train_loss/len(data_loader)
 
 
 
 @torch.no_grad()
-def val(model, data_loader, terms_graph, criterion, device):
+def val(model, data_loader, terms_graph, label_pred_criterion, graph_recon_criterion, device):
     model.eval()
     val_loss = 0.0
     pred_scores, true_scores = [], []
@@ -142,21 +156,24 @@ def val(model, data_loader, terms_graph, criterion, device):
         # print(y_true.shape)
 
         graph = terms_graph.get(uniprot_ids)
-        terms, rel_mat = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device)
+        terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, rel_mat, seqs)
+        y_pred, adj_pred = model(terms, ancestors_rel_matrix, seqs)
         
-        # batch_loss, y_pred = compute_loss(y_pred, y_true, criterion) 
-        batch_loss = criterion(y_pred, y_true)
+        # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
+        label_pred_batch_loss = label_pred_criterion(y_pred, y_true)
+        adj_recon_loss = graph_recon_criterion(adj_pred, adj_matrix)
 
-        val_loss = val_loss + batch_loss.item()
+        loss = label_pred_batch_loss + adj_recon_loss
+
+        val_loss = val_loss + loss.item()
         
         pred_scores.append(torch.sigmoid(y_pred).detach().cpu().numpy())
         true_scores.append(y_true.detach().cpu().numpy())
 
-        print(f"    val batch: {i}, loss: {batch_loss.item()}")
-        # if i==5: break
+        print(f"    val batch: {i}, loss: {loss.item()}")
+        if i==5: break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
     # print(true_scores.shape, pred_scores.shape)
     return val_loss/len(data_loader), true_scores, pred_scores
