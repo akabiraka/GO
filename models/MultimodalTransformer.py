@@ -20,21 +20,20 @@ class Model(torch.nn.Module):
         self.adj_prediction_layer = AdjMatPredictionLayer()
         
 
-    def forward(self, terms, terms_ancestors_rel_mat, seqs):
+    def forward(self, terms, rel_mat, seqs):
         """ term_nodes: [n_nodes, n_samples, 768]
-            terms_ancestors_rel_mat: [n_nodes, n_nodes]
+            rel_mat: [n_nodes, n_nodes]
             seqs: [batch_size, 768]
         """
         seqs = self.seq_projection_layer(seqs) #[batch_size, embed_dim]
         # print(f"seqs_reps: {seqs.shape}")
         
         terms = self.term_embedding_layer(x=terms) # shape: [n_nodes, embed_dim]
-        terms = self.GOTopoTransformer(x=terms, key_padding_mask=None, attn_mask=terms_ancestors_rel_mat)
+        terms = self.GOTopoTransformer(x=terms, key_padding_mask=None, attn_mask=rel_mat)
         # print(f"terms_reps: {terms.shape}")
         
         scores = self.prediction_refinement_layer(seqs, terms)
-        adj = self.adj_prediction_layer(terms)
-        return scores, adj
+        return scores
 
 
 
@@ -115,7 +114,7 @@ class SeqProjectionLayer(torch.nn.Module):
         return F.dropout(F.relu(self.projection(x)), self.dropout_p)
 
 
-def train(model, data_loader, terms_graph, label_pred_criterion, graph_recon_criterion, optimizer, device):
+def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, device):
     model.train()
     train_loss = 0.0
 
@@ -127,13 +126,10 @@ def train(model, data_loader, terms_graph, label_pred_criterion, graph_recon_cri
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred, adj_pred = model(terms, ancestors_rel_matrix, seqs)
+        y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
-        label_pred_batch_loss = label_pred_criterion(y_pred, y_true)
-        adj_recon_loss = graph_recon_criterion(adj_pred, adj_matrix)
-
-        loss = label_pred_batch_loss + adj_recon_loss
+        loss = label_pred_criterion(y_pred, y_true)
 
         loss.backward()
         optimizer.step()
@@ -146,7 +142,7 @@ def train(model, data_loader, terms_graph, label_pred_criterion, graph_recon_cri
 
 
 @torch.no_grad()
-def val(model, data_loader, terms_graph, label_pred_criterion, graph_recon_criterion, device):
+def val(model, data_loader, terms_graph, label_pred_criterion, device):
     model.eval()
     val_loss = 0.0
     pred_scores, true_scores = [], []
@@ -159,13 +155,10 @@ def val(model, data_loader, terms_graph, label_pred_criterion, graph_recon_crite
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred, adj_pred = model(terms, ancestors_rel_matrix, seqs)
+        y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
-        label_pred_batch_loss = label_pred_criterion(y_pred, y_true)
-        adj_recon_loss = graph_recon_criterion(adj_pred, adj_matrix)
-
-        loss = label_pred_batch_loss + adj_recon_loss
+        loss = label_pred_criterion(y_pred, y_true)
 
         val_loss = val_loss + loss.item()
         
