@@ -12,13 +12,13 @@ class Config(object):
     def __init__(self, 
                  species="yeast", 
                  GO="MF", 
-                 lr=1e-5, 
+                 lr=1e-4, 
                  batch_size=32, 
-                 n_epochs=500,
+                 n_epochs=5000,
                  max_len_of_a_seq=512, 
                  embed_dim=256,
                  n_samples_from_pool=5, 
-                 n_encoder_layers=3, 
+                 n_encoder_layers=5, 
                  n_attn_heads=8, 
                  dropout=0.3,
                  add_node_embed_layer=False, 
@@ -34,7 +34,7 @@ class Config(object):
         self.n_epochs = n_epochs #1000
 
         # Input configs
-        vocab_sizes = {"BP": 353, "CC": 244, "MF": 425}
+        vocab_sizes = {"BP": 282, "CC": 245, "MF": 242}
         self.vocab_size = vocab_sizes[self.GO] #[0, 20] inclusive for 20 amino acids [1, 20] and 0 for padding
         self.max_num_of_nodes = self.vocab_size # this will not be used
         self.max_len_of_a_seq = max_len_of_a_seq #1024, this also means number of nodes for graphs
