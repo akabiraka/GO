@@ -8,15 +8,24 @@ from torch.utils.tensorboard import SummaryWriter
 
 import numpy as np
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights, get_positive_class_weights
+from models.Dataset_1 import SeqAssociationDataset, TermsGraph, get_class_weights, get_positive_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
-import eval_metrics as eval_metrics
+import eval_metrics_1 as eval_metrics
 
 
 config = Config()
 out_filename = config.get_model_name()
 print(out_filename)
+
+
+# loading dataset
+terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
+train_dataset = SeqAssociationDataset(config.species, config.GO, dataset="train")
+val_dataset = SeqAssociationDataset(config.species, config.GO, dataset="val")
+train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
+val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
+print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
 
 
 
@@ -28,16 +37,6 @@ label_pred_criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 print("log: model loaded")
-
-
-# loading dataset
-terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
-train_dataset = SeqAssociationDataset(config.species, config.GO, dataset="train")
-val_dataset = SeqAssociationDataset(config.species, config.GO, dataset="val")
-train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
-print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
-
 
 
 

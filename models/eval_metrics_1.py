@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from transformer.config import Config
 
 config = Config()
-dataset = "val"
+eval_set = "val"
 
 # for evaluation purposes
 go_rels = Ontology('data/downloads/go.obo', with_rels=True)
@@ -19,17 +19,15 @@ term_to_idx_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_t
 idx_to_term_dict = {i:term for term, i in term_to_idx_dict.items()}
 terms_set = set(term_to_idx_dict.keys())
 
-train_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl")
-train_annotations = train_df['GO_id'].values
-train_annotations = list(map(lambda x: set(x), train_annotations))
-print("Length of train set: " + str(len(train_df)))
+train_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl") # list of uniprot_id, set([terms])
+print(f"Length of train set: {len(train_dataset)}")
 
-test_df = pd.read_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{dataset}.pkl")
-test_annotations = test_df['GO_id'].values
-test_annotations = list(map(lambda x: set(x), test_annotations))
-print("Length of evaluation set: " + str(len(test_df)))
+test_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{eval_set}.pkl")
+print(f"Length of eval set: {len(test_dataset)}")
 
 
+test_annotations = [annots for uniprot_id, annots in test_dataset]
+train_annotations = [annots for uniprot_id, annots in train_dataset]
 go_rels.calculate_ic(train_annotations + test_annotations)
 print("Log: finished computing ic")
 
@@ -90,7 +88,7 @@ def Fmax_Smin_AUPR(pred_scores):
     for t in range(1, 101): # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
-        for i, row in enumerate(test_df.itertuples()):
+        for i, (uniprot_id, annots) in enumerate(test_annotations):
             pred_terms_indies = np.where(pred_scores[i] > threshold)[0]
             annots = set([idx_to_term_dict.get(j) for j in pred_terms_indies])
 
