@@ -11,7 +11,7 @@ class Config(object):
 
     def __init__(self, 
                  species="yeast", 
-                 GO="CC", 
+                 GO="MF", 
                  lr=1e-4, 
                  batch_size=32, 
                  n_epochs=5000,
@@ -53,7 +53,7 @@ class Config(object):
         self.esm1b_embed_dim = 768
         
 
-    def get_model_name(self, task="Modelv1.1") -> str:
+    def get_model_name(self, task="Modelv1") -> str:
         return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}_{self.n_samples_from_pool}" +\
                f"_{self.dim_ff}_{self.n_encoder_layers}_{self.n_attn_heads}_{self.dropout}_{self.add_node_embed_layer}_{self.add_positional_encoding_layer}" +\
                f"_{self.device}"

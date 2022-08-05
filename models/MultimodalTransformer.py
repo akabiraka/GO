@@ -126,7 +126,8 @@ def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, devi
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, ancestors_rel_matrix, seqs)
+        # y_pred = model(terms, ancestors_rel_matrix, seqs)
+        y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         loss = label_pred_criterion(y_pred, y_true)
@@ -155,7 +156,8 @@ def val(model, data_loader, terms_graph, label_pred_criterion, device):
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, ancestors_rel_matrix, seqs)
+        # y_pred = model(terms, ancestors_rel_matrix, seqs)
+        y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         loss = label_pred_criterion(y_pred, y_true)

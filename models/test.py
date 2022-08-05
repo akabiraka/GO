@@ -31,7 +31,7 @@ model.load_state_dict(checkpoint['model_state_dict'])
 # loading dataset
 terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
 test_dataset = SeqAssociationDataset(config.species, config.GO, dataset="test")
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=config.batch_size, shuffle=False)
 
 
 test_loss, true_scores, pred_scores = MultimodalTransformer.val(model, test_loader, terms_graph, criterion, config.device)

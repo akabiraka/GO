@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from transformer.config import Config
 
 config = Config()
-eval_set = "val"
+eval_set = "test"
 
 # for evaluation purposes
 go_rels = Ontology('data/downloads/go.obo', with_rels=True)
