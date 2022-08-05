@@ -56,6 +56,7 @@ class TermsGraph(object):
 
         self.GOid_vs_uniprotids_dict = self.terms_annotated_to()
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
+        self.terms_adjacency = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_adjacency.pkl")
     
 
     def terms_annotated_to(self):
@@ -84,8 +85,8 @@ class TermsGraph(object):
 
         data = {}
         data["nodes"] = torch.stack(nodes)
-        data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
-
+        data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.bool) # torch.logical_not()
+        data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
         return data    
 
 
