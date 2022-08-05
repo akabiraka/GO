@@ -210,7 +210,7 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
 
     Utils.save_as_pickle(train_annots, f"data/goa/{species}/train_val_test_set/{go}/train.pkl")
     Utils.save_as_pickle(val_annots, f"data/goa/{species}/train_val_test_set/{go}/val.pkl")
-    Utils.save_as_pickle(list(test_annots), f"data/goa/{species}/train_val_test_set/{go}/test.pkl")
+    Utils.save_as_pickle(list(test_annots.items()), f"data/goa/{species}/train_val_test_set/{go}/test.pkl")
     print()
 
 

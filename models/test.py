@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 torch.cuda.empty_cache()
 
 from transformer.config import Config
-from models.Dataset import SeqAssociationDataset, TermsGraph, get_class_weights
+from models.Dataset_1 import SeqAssociationDataset, TermsGraph, get_class_weights
 import models.MultimodalTransformer as MultimodalTransformer
 
 import utils as Utils

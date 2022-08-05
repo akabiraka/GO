@@ -2,7 +2,7 @@ import sys
 sys.path.append("../GO")
 
 from transformer.config import Config
-import eval_metrics as eval_metrics
+import eval_metrics_1 as eval_metrics
 import utils as Utils
 
 config = Config()
@@ -14,7 +14,7 @@ true_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_true_scores
 pred_scores = Utils.load_pickle(f"outputs/predictions/{out_filename}_pred_scores.pkl")
 print(true_scores.shape, pred_scores.shape)
 
-eval_metrics.Fmax_Smin_AUPR(pred_scores, eval_dataset="test")
+eval_metrics.Fmax_Smin_AUPR(pred_scores)
 # eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
 # eval_metrics.MicroAvgF1(true_scores, pred_scores)
 # eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)

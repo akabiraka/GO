@@ -11,7 +11,7 @@ class Config(object):
 
     def __init__(self, 
                  species="yeast", 
-                 GO="MF", 
+                 GO="CC", 
                  lr=1e-4, 
                  batch_size=32, 
                  n_epochs=5000,
