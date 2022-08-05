@@ -85,7 +85,7 @@ class TermsGraph(object):
 
         data = {}
         data["nodes"] = torch.stack(nodes)
-        data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.bool) # torch.logical_not()
+        data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.float32)# dtype=torch.bool) # torch.logical_not()
         data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
         return data    
 

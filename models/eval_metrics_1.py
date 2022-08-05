@@ -88,7 +88,7 @@ def Fmax_Smin_AUPR(pred_scores):
     for t in range(1, 101): # the range in this loop has influence in the AUPR output
         threshold = t / 100.0
         preds = []
-        for i, (uniprot_id, annots) in enumerate(test_annotations):
+        for i, (uniprot_id, annots) in enumerate(test_dataset):
             pred_terms_indies = np.where(pred_scores[i] > threshold)[0]
             annots = set([idx_to_term_dict.get(j) for j in pred_terms_indies])
 

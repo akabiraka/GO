@@ -126,7 +126,7 @@ def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, devi
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, adj_matrix, seqs)
+        y_pred = model(terms, ancestors_rel_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         loss = label_pred_criterion(y_pred, y_true)
@@ -136,7 +136,7 @@ def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, devi
         
         train_loss = train_loss + loss.item()
         print(f"    train batch: {i}, loss: {loss.item()}")
-        if i==5: break
+        # if i==5: break
     return train_loss/len(data_loader)
 
 
@@ -155,7 +155,7 @@ def val(model, data_loader, terms_graph, label_pred_criterion, device):
         terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        y_pred = model(terms, adj_matrix, seqs)
+        y_pred = model(terms, ancestors_rel_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
         loss = label_pred_criterion(y_pred, y_true)
@@ -166,7 +166,7 @@ def val(model, data_loader, terms_graph, label_pred_criterion, device):
         true_scores.append(y_true.detach().cpu().numpy())
 
         print(f"    val batch: {i}, loss: {loss.item()}")
-        if i==5: break
+        # if i==5: break
     true_scores, pred_scores = np.vstack(true_scores), np.vstack(pred_scores)
     # print(true_scores.shape, pred_scores.shape)
     return val_loss/len(data_loader), true_scores, pred_scores
