@@ -40,7 +40,7 @@ print("log: model loaded")
 
 
 
-best_loss, best_f1 = np.inf, np.inf
+best_loss, best_fmax = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, label_pred_criterion, optimizer, config.device)
     val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, terms_graph, label_pred_criterion, config.device)
@@ -68,10 +68,10 @@ for epoch in range(1, config.n_epochs+1):
 
 
     # save model dict based on performance
-    if fmax < best_f1:
+    if fmax < best_fmax:
         best_fmax = fmax
         torch.save({'epoch': epoch,
                     'model_state_dict': model.state_dict(),
-                    }, f"outputs/models/{out_filename}_pref.pth")
+                    }, f"outputs/models/{out_filename}_perf.pth")
 
     

@@ -13,7 +13,7 @@ import utils as Utils
 
 config = Config()
 out_filename = config.get_model_name()
-out_filename = out_filename+"_pref" #_loss
+out_filename = out_filename+"_perf" #_loss
 print(f"Running test: {out_filename}")
 
 
