@@ -18,9 +18,9 @@ class Config(object):
                  max_len_of_a_seq=512, 
                  embed_dim=256,
                  n_samples_from_pool=5, 
-                 n_encoder_layers=5, 
+                 n_encoder_layers=3, 
                  n_attn_heads=8, 
-                 dropout=0.3,
+                 dropout=0.5,
                  add_node_embed_layer=False, 
                  add_positional_encoding_layer=False) -> None:
         super(Config, self).__init__()
@@ -34,7 +34,7 @@ class Config(object):
         self.n_epochs = n_epochs #1000
 
         # Input configs
-        vocab_sizes = {"BP": 282, "CC": 245, "MF": 242}
+        vocab_sizes = {"BP": 218, "CC": 246, "MF": 242}
         self.vocab_size = vocab_sizes[self.GO] #[0, 20] inclusive for 20 amino acids [1, 20] and 0 for padding
         self.max_num_of_nodes = self.vocab_size # this will not be used
         self.max_len_of_a_seq = max_len_of_a_seq #1024, this also means number of nodes for graphs
@@ -53,7 +53,7 @@ class Config(object):
         self.esm1b_embed_dim = 768
         
 
-    def get_model_name(self, task="Modelv2.1") -> str:
+    def get_model_name(self, task="Modelv3.1") -> str:
         return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}_{self.n_samples_from_pool}" +\
                f"_{self.dim_ff}_{self.n_encoder_layers}_{self.n_attn_heads}_{self.dropout}_{self.add_node_embed_layer}_{self.add_positional_encoding_layer}" +\
                f"_{self.device}"

@@ -85,11 +85,11 @@ class TermsGraph(object):
 
         data = {}
         data["nodes"] = torch.stack(nodes)
-        data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.float32)# dtype=torch.bool) # torch.logical_not()
-        data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
+        # data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.float32)# dtype=torch.bool) # torch.logical_not()
+        # data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
 
-        # data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
-        # data["adjacency_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_adjacency, dtype=torch.bool))
+        data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
+        data["adjacency_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_adjacency, dtype=torch.bool))
         return data    
 
 

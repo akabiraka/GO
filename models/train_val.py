@@ -12,7 +12,8 @@ from models.Dataset_1 import SeqAssociationDataset, TermsGraph, get_class_weight
 import models.MultimodalTransformer as MultimodalTransformer
 
 import eval_metrics_1 as eval_metrics
-
+from val_1 import run_val
+from test_1 import run_test
 
 config = Config()
 out_filename = config.get_model_name()
@@ -22,10 +23,8 @@ print(out_filename)
 # loading dataset
 terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
 train_dataset = SeqAssociationDataset(config.species, config.GO, dataset="train")
-val_dataset = SeqAssociationDataset(config.species, config.GO, dataset="val")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
-print(f"train batches: {len(train_loader)}, val batches: {len(val_loader)}")
+print(f"train batches: {len(train_loader)}")
 
 
 
@@ -39,25 +38,27 @@ writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 print("log: model loaded")
 
 
-
 best_loss, best_fmax = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, label_pred_criterion, optimizer, config.device)
-    val_loss, true_scores, pred_scores = MultimodalTransformer.val(model, val_loader, terms_graph, label_pred_criterion, config.device)
+
+    if epoch%10 != 0: continue
+
+    val_loss, val_tmax, val_fmax, val_smin, val_aupr = run_val(model, terms_graph, label_pred_criterion)
+    test_loss, test_tmax, test_fmax, test_smin, test_aupr = run_test(model, terms_graph, label_pred_criterion)
 
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
 
-    tmax, fmax, smin, aupr = eval_metrics.Fmax_Smin_AUPR(pred_scores)
-    # micro_avg_f1 = eval_metrics.MicroAvgF1_TPR(true_scores, pred_scores)
-    # micro_avg_f1 = eval_metrics.MicroAvgF1(true_scores, pred_scores)
-    # micro_avg_precision = eval_metrics.MicroAvgPrecision(true_scores, pred_scores)
-    # fmax = eval_metrics.Fmax(true_scores, pred_scores)
-
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
-    # writer.add_scalar('MicroAvgF1', micro_avg_f1, epoch)
-    # writer.add_scalar('MicroAvgPrecision', micro_avg_precision, epoch)
-    writer.add_scalar('Fmax', fmax, epoch)
+    writer.add_scalar('TestLoss', test_loss, epoch)
+
+    writer.add_scalar('ValFmax', val_fmax, epoch)
+    writer.add_scalar('TestFmax', test_fmax, epoch)
+    
+    writer.add_scalar('ValTh', val_tmax, epoch)
+    writer.add_scalar('TestTh', test_tmax, epoch)
+
 
     # save model dict based on loss
     if val_loss < best_loss:
@@ -68,8 +69,8 @@ for epoch in range(1, config.n_epochs+1):
 
 
     # save model dict based on performance
-    if fmax < best_fmax:
-        best_fmax = fmax
+    if val_fmax < best_fmax:
+        best_fmax = val_fmax
         torch.save({'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     }, f"outputs/models/{out_filename}_perf.pth")

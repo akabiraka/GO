@@ -4,32 +4,13 @@ sys.path.append("../GO")
 import numpy as np
 import pandas as pd
 import math
-from data_preprocess.GO import Ontology
-import utils as Utils
+
+
 import sklearn.metrics as metrics
 import matplotlib.pyplot as plt
-from transformer.config import Config
-
-config = Config()
-eval_set = "val" #test, val
-
-# for evaluation purposes
-go_rels = Ontology('data/downloads/go.obo', with_rels=True)
-term_to_idx_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_to_index_dicts/{config.GO}.pkl")
-idx_to_term_dict = {i:term for term, i in term_to_idx_dict.items()}
-terms_set = set(term_to_idx_dict.keys())
-
-train_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl") # list of uniprot_id, set([terms])
-print(f"Length of train set: {len(train_dataset)}")
-
-test_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{eval_set}.pkl")
-print(f"Length of eval set: {len(test_dataset)}")
 
 
-test_annotations = [annots for uniprot_id, annots in test_dataset]
-train_annotations = [annots for uniprot_id, annots in train_dataset]
-go_rels.calculate_ic(train_annotations + test_annotations)
-print("Log: finished computing ic")
+
 
 
 def evaluate_annotations(go, real_annots, pred_annots):
@@ -76,7 +57,7 @@ def evaluate_annotations(go, real_annots, pred_annots):
 
 
 
-def Fmax_Smin_AUPR(pred_scores):
+def Fmax_Smin_AUPR(pred_scores, test_dataset, idx_to_term_dict, go_rels, terms_set, test_annotations):
     # pred_scores = np.random.rand(869, 244)
     fmax = 0.0
     tmax = 0.0
@@ -125,34 +106,34 @@ def Fmax_Smin_AUPR(pred_scores):
     return tmax, fmax, smin, aupr
 
 
-def apply_true_path_rule_on_pred_scores(pred_scores, th):#, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
-    ext_pred_scores = np.zeros(pred_scores.shape)
-    rows, cols = pred_scores.shape
-    for i in range(rows):
-        for j in range(cols):
-            if not pred_scores[i, j] > th: continue
+# def apply_true_path_rule_on_pred_scores(pred_scores, th):#, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
+#     ext_pred_scores = np.zeros(pred_scores.shape)
+#     rows, cols = pred_scores.shape
+#     for i in range(rows):
+#         for j in range(cols):
+#             if not pred_scores[i, j] > th: continue
 
-            ext_pred_scores[i, j] = 1.0
+#             ext_pred_scores[i, j] = 1.0
 
-            ancestors = go_rels.get_anchestors(idx_to_term_dict.get(j))
-            ancestors = set(ancestors).intersection(terms_set) # taking ancestors those are in the studied terms
-            for ancestor in ancestors:
-                ext_pred_scores[i, term_to_idx_dict.get(ancestor)] = 1.0
+#             ancestors = go_rels.get_anchestors(idx_to_term_dict.get(j))
+#             ancestors = set(ancestors).intersection(terms_set) # taking ancestors those are in the studied terms
+#             for ancestor in ancestors:
+#                 ext_pred_scores[i, term_to_idx_dict.get(ancestor)] = 1.0
     
-    return ext_pred_scores
+#     return ext_pred_scores
 
-# TPR: true path rule
-def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
-    best_micro_avg_f1 = 0.0
-    for t in range(1, 101):
-        decision_th = t/100
-        ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, decision_th)
-        micro_avg_f1 = metrics.f1_score(true_scores, ext_pred_scores, average="micro")
-        if micro_avg_f1 > best_micro_avg_f1:
-            best_micro_avg_f1 = micro_avg_f1
+# # TPR: true path rule
+# def MicroAvgF1_TPR(true_scores:np.ndarray, pred_scores:np.ndarray):#, idx_to_term_dict:dict, term_to_idx_dict:dict, terms_set:set, go_rels:Ontology):
+#     best_micro_avg_f1 = 0.0
+#     for t in range(1, 101):
+#         decision_th = t/100
+#         ext_pred_scores = apply_true_path_rule_on_pred_scores(pred_scores, decision_th)
+#         micro_avg_f1 = metrics.f1_score(true_scores, ext_pred_scores, average="micro")
+#         if micro_avg_f1 > best_micro_avg_f1:
+#             best_micro_avg_f1 = micro_avg_f1
     
-    print(f"    FmMicroAvgF1_TPR: {best_micro_avg_f1:0.4f} at decision_th: {decision_th}")
-    return best_micro_avg_f1
+#     print(f"    FmMicroAvgF1_TPR: {best_micro_avg_f1:0.4f} at decision_th: {decision_th}")
+#     return best_micro_avg_f1
 
 
 def MicroAvgF1(true_scores:np.ndarray, pred_scores:np.ndarray):

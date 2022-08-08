@@ -7,7 +7,7 @@ import collections
 from sklearn.model_selection import train_test_split
 import pandas as pd
 
-EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC'])#, 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
+EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 
 species = "yeast"
 t0 = 20200811 # 11 Aug 2020, dev deadline
@@ -35,11 +35,13 @@ mf_test_annots = {}
 
 
 def print_summary(annots:dict):
-    n_prots = len(annots)
+    prots = [unitprot_id for unitprot_id, annots in annots.items()]
+    # print(prots) 
     all_annots = np.hstack([list(annots) for unitprot_id, annots in annots.items()])
+    
     n_annots = len(all_annots)
     n_terms = len(set(all_annots))
-    print(n_prots, n_annots, n_terms)
+    print(len(prots), n_annots, n_terms)
 
 
 def save_studied_terms(studied_terms_list, go):
@@ -141,7 +143,7 @@ for i, line in enumerate(f.readlines()):
         break
 
     # print(uniprot_id, GO_id, date, evidence)
-    # at this point, we extracted 3 things: uniprot_id, GO_id, date
+    # at this point, we extracted 4 things: uniprot_id, GO_id, date, evidence
 
 
     # separating annotations according to the GO={BP, CC, MF} types
@@ -149,11 +151,11 @@ for i, line in enumerate(f.readlines()):
         if date<=t0: bp_dev_annots = update_annot_dict(uniprot_id, GO_id, bp_dev_annots)  # bp_dev
         elif date>t0 and date<=t1: bp_test_annots = update_annot_dict(uniprot_id, GO_id, bp_test_annots)# possible bp_test
     
-    elif GO_id in cc_set: 
+    if GO_id in cc_set: 
         if date<=t0: cc_dev_annots = update_annot_dict(uniprot_id, GO_id, cc_dev_annots)  # cc_dev
         elif date>t0 and date<=t1: cc_test_annots = update_annot_dict(uniprot_id, GO_id, cc_test_annots)# possible cc_test
     
-    elif GO_id in mf_set:
+    if GO_id in mf_set:
         if date<=t0: mf_dev_annots = update_annot_dict(uniprot_id, GO_id, mf_dev_annots)  # mf_dev
         elif date>t0 and date<=t1: mf_test_annots = update_annot_dict(uniprot_id, GO_id, mf_test_annots)# possible mf_test
 
@@ -217,6 +219,6 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
     
 
 
-do(bp_dev_annots, bp_test_annots, terms_cutoff_value=150, n_annots=3, go="BP")
-do(cc_dev_annots, cc_test_annots, terms_cutoff_value=25, n_annots=3, go="CC")
-do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=3, go="MF")
+do(bp_dev_annots, bp_test_annots, terms_cutoff_value=200, n_annots=2, go="BP")
+do(cc_dev_annots, cc_test_annots, terms_cutoff_value=25, n_annots=2, go="CC")
+do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=2, go="MF")
