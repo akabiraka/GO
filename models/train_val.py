@@ -41,13 +41,15 @@ print("log: model loaded")
 best_loss, best_fmax = np.inf, np.inf
 for epoch in range(1, config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, label_pred_criterion, optimizer, config.device)
-
+    print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}")
+    
     if epoch%10 != 0: continue
 
     val_loss, val_tmax, val_fmax, val_smin, val_aupr = run_val(model, terms_graph, label_pred_criterion)
     test_loss, test_tmax, test_fmax, test_smin, test_aupr = run_test(model, terms_graph, label_pred_criterion)
 
-    print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}, val loss: {val_loss:.4f}")
+    print(f"    {val_loss:.4f}, {val_tmax:.4f}, {val_fmax:.4f}, {val_smin:.4f}, {val_aupr:.4f}")
+    print(f"    {test_loss:.4f}, {test_tmax:.4f}, {test_fmax:.4f}, {test_smin:.4f}, {test_aupr:.4f}")
 
     writer.add_scalar('TrainLoss', train_loss, epoch)
     writer.add_scalar('ValLoss', val_loss, epoch)
