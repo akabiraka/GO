@@ -114,6 +114,11 @@ class SeqProjectionLayer(torch.nn.Module):
         return F.dropout(F.relu(self.projection(x)), self.dropout_p)
 
 
+def count_parameters(model):
+    n_trainable_weights = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return n_trainable_weights
+
+
 def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, device):
     model.train()
     train_loss = 0.0

@@ -19,7 +19,7 @@ class Config(object):
                  embed_dim=256,
                  n_samples_from_pool=5, 
                  n_encoder_layers=3, 
-                 n_attn_heads=8, 
+                 n_attn_heads=1, 
                  dropout=0.5,
                  add_node_embed_layer=False, 
                  add_positional_encoding_layer=False) -> None:

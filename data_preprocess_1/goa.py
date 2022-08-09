@@ -6,6 +6,7 @@ import numpy as np
 import collections
 from sklearn.model_selection import train_test_split
 import pandas as pd
+import statistics
 
 EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 
@@ -34,14 +35,23 @@ cc_test_annots = {}
 mf_test_annots = {}
 
 
-def print_summary(annots:dict):
-    prots = [unitprot_id for unitprot_id, annots in annots.items()]
-    # print(prots) 
-    all_annots = np.hstack([list(annots) for unitprot_id, annots in annots.items()])
+# def print_summary(annots:dict):
+#     prots = [unitprot_id for unitprot_id, annots in annots.items()]
+#     # print(prots) 
+#     all_annots = np.hstack([list(annots) for unitprot_id, annots in annots.items()])
     
-    n_annots = len(all_annots)
-    n_terms = len(set(all_annots))
-    print(len(prots), n_annots, n_terms)
+#     n_annots = len(all_annots)
+#     n_terms = len(set(all_annots))
+#     print(len(prots), n_annots, n_terms)
+
+def print_summary(dataset_annots:list):
+    all_annots = np.hstack([list(annots) for unitprot_id, annots in dataset_annots])
+    prots = [unitprot_id for unitprot_id, annots in dataset_annots]
+    terms = set(all_annots)
+    print(f"    #-proteins: {len(prots)}, #-annotations: {len(all_annots)}, #-terms: {len(terms)}")
+
+    num_of_labels_list = [len(annots) for unitprot_id, annots in dataset_annots]
+    print(f"    num_of_labels_per_protein_distribution: mean: {statistics.mean(num_of_labels_list):.3f}, std: {statistics.stdev(num_of_labels_list):.3f}")
 
 
 def save_studied_terms(studied_terms_list, go):
@@ -201,14 +211,12 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
     print(f"#-seqs after updating with studied terms: {len(test_annots)}")
 
 
-    print_summary(dev_annots)
-    print_summary(test_annots)
-
-
-
     train_annots, val_annots = train_test_split(list(dev_annots.items()), test_size=0.10)
-    print_summary(dict(train_annots))
-    print_summary(dict(val_annots))
+
+    print_summary(list(dev_annots.items()))    
+    print_summary(train_annots)
+    print_summary(val_annots)
+    print_summary(list(test_annots.items()))
 
     Utils.save_as_pickle(train_annots, f"data/goa/{species}/train_val_test_set/{go}/train.pkl")
     Utils.save_as_pickle(val_annots, f"data/goa/{species}/train_val_test_set/{go}/val.pkl")

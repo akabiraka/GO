@@ -36,6 +36,7 @@ label_pred_criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
 writer = SummaryWriter(f"outputs/tensorboard_runs/{out_filename}")
 print("log: model loaded")
+print(f"n_trainable_weights: {MultimodalTransformer.count_parameters(model)}")
 
 
 best_loss, best_fmax = np.inf, np.inf
