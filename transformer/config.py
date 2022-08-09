@@ -11,10 +11,10 @@ class Config(object):
 
     def __init__(self, 
                  species="yeast", 
-                 GO="MF", 
+                 GO="BP", 
                  lr=1e-4, 
                  batch_size=32, 
-                 n_epochs=5000,
+                 n_epochs=2000,
                  max_len_of_a_seq=512, 
                  embed_dim=256,
                  n_samples_from_pool=5, 
