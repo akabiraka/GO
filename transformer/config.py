@@ -19,7 +19,7 @@ class Config(object):
                  embed_dim=256,
                  n_samples_from_pool=5, 
                  n_encoder_layers=3, 
-                 n_attn_heads=1, 
+                 n_attn_heads=2, 
                  dropout=0.5,
                  add_node_embed_layer=False, 
                  add_positional_encoding_layer=False) -> None:
@@ -34,7 +34,7 @@ class Config(object):
         self.n_epochs = n_epochs #1000
 
         # Input configs
-        vocab_sizes = {"BP": 218, "CC": 246, "MF": 242}
+        vocab_sizes = {"BP": 263, "CC": 244, "MF": 365}
         self.vocab_size = vocab_sizes[self.GO] #[0, 20] inclusive for 20 amino acids [1, 20] and 0 for padding
         self.max_num_of_nodes = self.vocab_size # this will not be used
         self.max_len_of_a_seq = max_len_of_a_seq #1024, this also means number of nodes for graphs

@@ -51,7 +51,7 @@ def print_summary(dataset_annots:list):
     print(f"    #-proteins: {len(prots)}, #-annotations: {len(all_annots)}, #-terms: {len(terms)}")
 
     num_of_labels_list = [len(annots) for unitprot_id, annots in dataset_annots]
-    print(f"    num_of_labels_per_protein_distribution: mean: {statistics.mean(num_of_labels_list):.3f}, std: {statistics.stdev(num_of_labels_list):.3f}")
+    print(f"    num_of_labels_per_protein_distribution: mean, std: {statistics.mean(num_of_labels_list):.3f}, {statistics.stdev(num_of_labels_list):.3f}")
 
 
 def save_studied_terms(studied_terms_list, go):
@@ -226,7 +226,18 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
 
     
 
+# applying multiview-GCN cutoff values
+# do(bp_dev_annots, bp_test_annots, terms_cutoff_value=125, n_annots=0, go="BP")
+# do(cc_dev_annots, cc_test_annots, terms_cutoff_value=25, n_annots=0, go="CC")
+# do(mf_dev_annots, mf_test_annots, terms_cutoff_value=25, n_annots=0, go="MF")
 
-do(bp_dev_annots, bp_test_annots, terms_cutoff_value=200, n_annots=2, go="BP")
-do(cc_dev_annots, cc_test_annots, terms_cutoff_value=25, n_annots=2, go="CC")
+
+# applying DeepGO cutoff values
+# do(bp_dev_annots, bp_test_annots, terms_cutoff_value=250, n_annots=0, go="BP")
+# do(cc_dev_annots, cc_test_annots, terms_cutoff_value=50, n_annots=0, go="CC")
+# do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=0, go="MF")
+
+
+do(bp_dev_annots, bp_test_annots, terms_cutoff_value=250, n_annots=2, go="BP")
+do(cc_dev_annots, cc_test_annots, terms_cutoff_value=50, n_annots=2, go="CC")
 do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=2, go="MF")

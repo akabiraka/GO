@@ -73,10 +73,10 @@ for epoch in range(config.n_epochs+1):
 
 
     # save model dict based on performance
-    if val_fmax < best_fmax:
-        best_fmax = val_fmax
-        torch.save({'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    }, f"outputs/models/{out_filename}_perf.pth")
+    # if val_fmax < best_fmax:
+    #     best_fmax = val_fmax
+    #     torch.save({'epoch': epoch,
+    #                 'model_state_dict': model.state_dict(),
+    #                 }, f"outputs/models/{out_filename}_perf.pth")
 
     
