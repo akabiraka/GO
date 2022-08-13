@@ -10,12 +10,12 @@ from sklearn.utils.class_weight import compute_class_weight
 import random
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, dataset="train") -> None:
+    def __init__(self, species, GO, dataset="train", data_generation_process="time_series_no_knowledge") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
         
-        self.dataset_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{GO}/{dataset}.pkl")
+        self.dataset_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/{dataset}.pkl")
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
         
 
@@ -46,13 +46,13 @@ class SeqAssociationDataset(Dataset):
 
 
 class TermsGraph(object):
-    def __init__(self, species, GO, n_samples_from_pool=5) -> None:
+    def __init__(self, species, GO, n_samples_from_pool=5, data_generation_process="time_series_no_knowledge") -> None:
         self.species = species
         self.GO = GO
         self.n_samples = n_samples_from_pool
 
         self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
-        self.train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
+        self.train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
 
         self.GOid_vs_uniprotids_dict = self.terms_annotated_to()
         self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
@@ -138,10 +138,10 @@ class TermsGraph(object):
 
     
 
-def get_class_weights(species, GO):
+def get_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
     # computing class weights from the train data
     terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
-    train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
+    train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
     
     classes = np.array([key for key, value in terms_dict.items()])
     all_labels = np.hstack([list(annots) for unitprot_id, annots in train_annots])
@@ -155,9 +155,9 @@ def get_class_weights(species, GO):
 # print(class_weights)
 
 
-def get_positive_class_weights(species, GO):
+def get_positive_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
     terms_to_idx_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
-    train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{GO}/train.pkl")
+    train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
 
     def generate_true_label(GO_terms):
         y_true = np.zeros(len(terms_to_idx_dict), dtype=np.int32)

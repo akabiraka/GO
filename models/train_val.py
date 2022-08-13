@@ -21,8 +21,8 @@ print(out_filename)
 
 
 # loading dataset
-terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool)
-train_dataset = SeqAssociationDataset(config.species, config.GO, dataset="train")
+terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool, config.data_generation_process)
+train_dataset = SeqAssociationDataset(config.species, config.GO, "train", config.data_generation_process)
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 print(f"train batches: {len(train_loader)}")
 

@@ -11,6 +11,8 @@ import statistics
 EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 
 species = "yeast"
+data_generation_process = "time_delay_no_knowledge"
+
 t0 = 20200811 # 11 Aug 2020, dev deadline
 t1 = 20220114 # 14 Jan 2022, test deadline
 
@@ -218,9 +220,9 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
     print_summary(val_annots)
     print_summary(list(test_annots.items()))
 
-    Utils.save_as_pickle(train_annots, f"data/goa/{species}/train_val_test_set/{go}/train.pkl")
-    Utils.save_as_pickle(val_annots, f"data/goa/{species}/train_val_test_set/{go}/val.pkl")
-    Utils.save_as_pickle(list(test_annots.items()), f"data/goa/{species}/train_val_test_set/{go}/test.pkl")
+    Utils.save_as_pickle(train_annots, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{go}/train.pkl")
+    Utils.save_as_pickle(val_annots, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{go}/val.pkl")
+    Utils.save_as_pickle(list(test_annots.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{go}/test.pkl")
     print()
 
 
@@ -238,6 +240,7 @@ def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
 # do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=0, go="MF")
 
 
-do(bp_dev_annots, bp_test_annots, terms_cutoff_value=250, n_annots=2, go="BP")
-do(cc_dev_annots, cc_test_annots, terms_cutoff_value=50, n_annots=2, go="CC")
-do(mf_dev_annots, mf_test_annots, terms_cutoff_value=50, n_annots=2, go="MF")
+# mine
+do(bp_dev_annots, bp_test_annots, terms_cutoff_value=150, n_annots=0, go="BP")
+do(cc_dev_annots, cc_test_annots, terms_cutoff_value=25, n_annots=0, go="CC")
+do(mf_dev_annots, mf_test_annots, terms_cutoff_value=25, n_annots=0, go="MF")

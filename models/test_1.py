@@ -17,10 +17,10 @@ term_to_idx_dict = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_t
 idx_to_term_dict = {i:term for term, i in term_to_idx_dict.items()}
 terms_set = set(term_to_idx_dict.keys())
 
-train_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl") # list of uniprot_id, set([terms])
+train_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.data_generation_process}/{config.GO}/train.pkl") # list of uniprot_id, set([terms])
 print(f"Length of train set: {len(train_dataset)}")
 
-test_set = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/test.pkl")
+test_set = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.data_generation_process}/{config.GO}/test.pkl")
 print(f"Length of eval set: {len(test_set)}")
 
 

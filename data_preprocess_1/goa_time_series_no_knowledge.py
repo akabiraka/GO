@@ -12,6 +12,7 @@ import statistics
 EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 
 species = "yeast"
+data_generation_process = "time_delay_no_knowledge"
 t0 = 20000101 # 1 Jan 2000
 t1 = 20220114 # 14 Jan 2022
 
@@ -209,9 +210,9 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     print_summary(list(val_set.items()))
     print_summary(list(test_set.items()))
 
-    Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{GOname}/train.pkl")
-    Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{GOname}/val.pkl")
-    Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{GOname}/test.pkl")
+    Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
+    Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
+    Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
 
 
 generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
