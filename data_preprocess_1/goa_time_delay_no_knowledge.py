@@ -16,7 +16,7 @@ t0 = 20200811 # 11 Aug 2020, dev deadline
 t1 = 20220114 # 14 Jan 2022, test deadline
 
 # def do(dev_annots, test_annots, terms_cutoff_value, n_annots, go):
-def generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0):
+def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast_n_annots=0):
     dev_set, test_set = {}, {} # uniprot_id, set of annots
 
     f = open(f"data/downloads/{species}_goa.gpa", "r")
