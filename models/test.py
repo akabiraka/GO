@@ -15,7 +15,7 @@ from test_1 import run_test
 
 config = Config()
 out_filename = config.get_model_name()
-out_filename = out_filename+"_loss" #
+out_filename = out_filename+"_loss" # _perf, _last
 print(f"Running test: {out_filename}")
 
 

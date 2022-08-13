@@ -39,7 +39,7 @@ print("log: model loaded")
 print(f"n_trainable_weights: {MultimodalTransformer.count_parameters(model)}")
 
 
-best_loss, best_fmax = np.inf, np.inf
+best_loss, best_fmax = np.inf, 0.0
 for epoch in range(config.n_epochs+1):
     train_loss = MultimodalTransformer.train(model, train_loader, terms_graph, label_pred_criterion, optimizer, config.device)
     print(f"Epoch: {epoch:03d}, train loss: {train_loss:.4f}")
@@ -73,10 +73,14 @@ for epoch in range(config.n_epochs+1):
 
 
     # save model dict based on performance
-    # if val_fmax < best_fmax:
-    #     best_fmax = val_fmax
-    #     torch.save({'epoch': epoch,
-    #                 'model_state_dict': model.state_dict(),
-    #                 }, f"outputs/models/{out_filename}_perf.pth")
+    if val_fmax > best_fmax:
+        best_fmax = val_fmax
+        torch.save({'epoch': epoch,
+                    'model_state_dict': model.state_dict(),
+                    }, f"outputs/models/{out_filename}_perf.pth")
 
-    
+
+# saving the last model
+torch.save({'epoch': config.n_epochs,
+            'model_state_dict': model.state_dict(),
+            }, f"outputs/models/{out_filename}_last.pth")    

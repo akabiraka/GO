@@ -10,7 +10,6 @@ from torch.utils.data import DataLoader
 from models.Dataset_1 import SeqAssociationDataset
 
 config = Config()
-eval_set = "test" #test, val
 
 # for evaluation purposes
 go_rels = Ontology('data/downloads/go.obo', with_rels=True)
@@ -21,7 +20,7 @@ terms_set = set(term_to_idx_dict.keys())
 train_dataset = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/train.pkl") # list of uniprot_id, set([terms])
 print(f"Length of train set: {len(train_dataset)}")
 
-test_set = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/{eval_set}.pkl")
+test_set = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.GO}/test.pkl")
 print(f"Length of eval set: {len(test_set)}")
 
 
