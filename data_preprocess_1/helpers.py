@@ -102,3 +102,37 @@ def update_annot_dict(uniprot_id, GO_id, annot_dict:dict):
     return annot_dict
 
 
+
+def validate_line(i, line):
+    do_continue, uniprot_id, GO_id, date, evidence = False, "", "", 0, ""
+
+    if not line.startswith("UniProtKB"): 
+        do_continue = True
+        return do_continue, uniprot_id, GO_id, date, evidence
+
+    line_items = line.split()
+    uniprot_id = line_items[1]
+    GO_id = line_items[3]
+    evidence = line_items[-1].split("=")[1].upper()
+
+    # validate evidence code
+    if evidence not in EXP_CODES: 
+        do_continue = True
+        return do_continue, uniprot_id, GO_id, date, evidence
+
+
+    # validate GO_id
+    if not GO_id.startswith("GO:"):
+        raise(f"GO id issue detected at line {i}: {GO_id}")
+
+    # validate date
+    if line_items[-3].isdigit() and len(line_items[-3])==8:
+        date = int(line_items[-3])
+    elif line_items[-4].isdigit() and len(line_items[-4])==8:
+        date = int(line_items[-4])
+    else: 
+        raise(f"Date issue detected at line {i}: {date}")
+
+    # print(uniprot_id, GO_id, date, evidence)
+
+    return do_continue, uniprot_id, GO_id, date, evidence

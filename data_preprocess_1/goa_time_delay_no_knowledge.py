@@ -23,31 +23,8 @@ def generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_
     for i, line in enumerate(f.readlines()):
         # print(f"line no: {i}")
 
-        if not line.startswith("UniProtKB"): continue
-
-        line_items = line.split()
-        uniprot_id = line_items[1]
-        GO_id = line_items[3]
-        evidence = line_items[-1].split("=")[1].upper()
-
-        # validate evidence code
-        if evidence not in EXP_CODES: continue
-
-        # validate GO_id
-        if not GO_id.startswith("GO:"):
-            print(f"GO id issue detected at line {i}: {GO_id}")
-            break
-
-        # validate date
-        if line_items[-3].isdigit() and len(line_items[-3])==8:
-            date = int(line_items[-3])
-        elif line_items[-4].isdigit() and len(line_items[-4])==8:
-            date = int(line_items[-4])
-        else: 
-            print(f"Date issue detected at line {i}: {date}")
-            break
-
-        # print(uniprot_id, GO_id, date, evidence)
+        do_continue, uniprot_id, GO_id, date, evidence = validate_line(i, line)
+        if do_continue: continue
 
 
         # separating annotations according to the GO={BP, CC, MF} types
@@ -87,11 +64,19 @@ def generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_
     print_summary(list(dev_set.items()))
     print_summary(list(test_set.items()))
 
+    remove_nonexist_uniprotids_from_dev_test(dev_set) # inplace operation
+    remove_nonexist_uniprotids_from_dev_test(test_set) # inplace operation
+    print("\nSummary of sets after removing nonexist uniprotids: ")
+    print_summary(list(dev_set.items()))
+    print_summary(list(test_set.items()))
+
     train_set, val_set = train_test_split(list(dev_set.items()), test_size=0.10)
     print("\nSummary of sets after train/val split: ")
     print_summary(train_set)
     print_summary(val_set)
     print_summary(list(test_set.items()))
+
+    
     
 
     Utils.save_as_pickle(train_set, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
@@ -114,6 +99,6 @@ def generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_
 
 
 # mine
-# generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
+generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
 # generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
-generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
+# generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
