@@ -9,7 +9,6 @@ import statistics
 
 import utils as Utils
 from helpers import *
-
 data_generation_process = "time_delay_no_knowledge"
 
 t0 = 20200811 # 11 Aug 2020, dev deadline
@@ -49,7 +48,8 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     print_summary(list(test_set.items()))
 
     studied_terms = compute_studied_terms(dev_set, cutoff_value)
-    save_studied_terms(list(studied_terms), go=GOname)
+    save_studied_terms(list(studied_terms), GOname, data_generation_process)
+    create_terms_relation_matrix(species, GOname, data_generation_process, relation="adjacency")
     print(f"\n#-of studied terms: {len(studied_terms)}")
 
     dev_set = update_annots_with_studied_terms(dev_set, studied_terms)
@@ -100,5 +100,5 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
 
 # mine
 generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
-# generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
-# generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
+generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
+generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)

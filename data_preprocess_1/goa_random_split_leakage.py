@@ -4,8 +4,8 @@ sys.path.append("../GO")
 from sklearn.model_selection import train_test_split
 import utils as Utils
 from helpers import *
-
 data_generation_process = "random_split_leakage"
+
 t1 = 20220114 # 14 Jan 2022
 
 def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast_n_annots=0):
@@ -31,7 +31,8 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
 
 
     studied_terms = compute_studied_terms(dev_set, cutoff_value)
-    save_studied_terms(list(studied_terms), go=GOname)
+    save_studied_terms(list(studied_terms), GOname, data_generation_process)
+    create_terms_relation_matrix(species, GOname, data_generation_process, relation="adjacency")
     print(f"\n#-of studied terms: {len(studied_terms)}")
 
     dev_set = update_annots_with_studied_terms(dev_set, studied_terms)
@@ -57,6 +58,6 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     Utils.save_as_pickle(val_set, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
     Utils.save_as_pickle(test_set, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
 
-# generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
-# generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
+generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
+generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
 generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)

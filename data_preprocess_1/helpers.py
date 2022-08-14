@@ -8,6 +8,7 @@ import numpy as np
 import collections
 
 species = "yeast"
+
 EXP_CODES = set(['EXP', 'IDA', 'IPI', 'IMP', 'IGI', 'IEP', 'TAS', 'IC', 'HTP', 'HDA', 'HMP', 'HGI', 'HEP'])
 
 go_rels = Ontology('data/downloads/go.obo', with_rels=True)
@@ -32,11 +33,11 @@ def print_summary(dataset_annots:list):
     print(f"    num_of_labels_per_protein_distribution: mean, std: {statistics.mean(num_of_labels_list):.3f}, {statistics.stdev(num_of_labels_list):.3f}")
 
 
-def save_studied_terms(studied_terms_list, go):
+def save_studied_terms(studied_terms_list, GOname, data_generation_process):
     GO_dict = {}
     for i, GO_id in enumerate(studied_terms_list):
         GO_dict[GO_id] = i
-    Utils.save_as_pickle(GO_dict, f"data/goa/{species}/studied_GO_id_to_index_dicts/{go}.pkl")
+    Utils.save_as_pickle(GO_dict, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/studied_terms.pkl")
     # print(GO_dict)
 
 
@@ -136,3 +137,44 @@ def validate_line(i, line):
     # print(uniprot_id, GO_id, date, evidence)
 
     return do_continue, uniprot_id, GO_id, date, evidence
+
+
+
+def get_related_terms(GO_id, relation="ancestors"):
+    if relation=="ancestors":
+        terms = go_rels.get_anchestors(GO_id)
+    elif relation=="children":
+        terms = go_rels.get_children(GO_id)
+    elif relation=="parents":
+        terms = go_rels.get_parents(GO_id)
+    elif relation=="adjacency":
+        terms = go_rels.get_parents(GO_id)
+    else:
+        raise NotImplementedError(f"Given relation={relation} is not implemented yet.")
+    
+    return terms
+
+
+# i-th row denotes the ancestor/children-indices of i if corresponding entry is 1
+def create_terms_relation_matrix(species, GO, data_generation_process, relation="adjacency"):
+    # relation could be [ancestors, children, parents, adjacency]
+    GO_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
+
+    studied_terms_set = set(GO_dict.keys())
+
+    n_GO_terms = len(GO_dict)
+    relation_matrix = np.zeros(shape=(n_GO_terms, n_GO_terms), dtype=np.int16) # realtion_matrix: R
+    np.fill_diagonal(relation_matrix, 1) # adding self loop
+
+    for GO_id, i in GO_dict.items():
+        terms = get_related_terms(GO_id, relation)
+        terms = studied_terms_set.intersection(terms)
+        for term in terms:
+            term_i = GO_dict.get(term)
+            relation_matrix[i, term_i] = 1
+            if relation=="adjacency": relation_matrix[term_i, i] = 1
+
+    Utils.save_as_pickle(relation_matrix, f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/{relation}.pkl")
+    # print(f"{species}-{GO}: {relation_matrix.shape}")
+    # print(f"Is it symmetric: {(relation_matrix==relation_matrix.T).all()}")
+    # print()

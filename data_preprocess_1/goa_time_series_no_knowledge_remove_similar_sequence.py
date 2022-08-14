@@ -2,7 +2,7 @@ import sys
 sys.path.append("../GO")
 
 import numpy as np
-np.random.seed(123456)
+# np.random.seed(123456)
 from sklearn.model_selection import train_test_split
 
 import utils as Utils
@@ -17,7 +17,7 @@ timeline = list(range(t0, t1, 3000))
 timeseries = [(timeline[i], timeline[i+1]) for i in range(len(timeline)-1)]
 # print(timeseries)
 train_timeseries, test_timeseries = train_test_split(timeseries, test_size=0.20)
-train_timeseries, val_timeseries = train_test_split(train_timeseries, test_size=0.10)
+train_timeseries, val_timeseries = train_test_split(train_timeseries, test_size=0.20)
 print(len(train_timeseries), len(val_timeseries), len(test_timeseries))
 # print(train_timeseries, val_timeseries, test_timeseries)
 
@@ -34,6 +34,29 @@ def check_timeseries(date:int):
         if date>=start and date<end:
             return "test"
         
+
+from Bio import pairwise2
+
+
+def remove_similar_sequence(train_set, test_set, th=0.5):
+    non_similar_prots = set()
+    for i, test_unitprot_id in enumerate(test_set.keys()):
+        test_seq  = species_uniprot_dict[test_unitprot_id]["seq"]
+        have_similar_prots = False
+        for train_uniprot_id in train_set.keys():
+            train_seq = species_uniprot_dict[train_uniprot_id]["seq"]
+            alignment_score = pairwise2.align.globalxx(test_seq, train_seq, score_only=True)
+            alignment_score = alignment_score / min(len(test_seq), len(train_seq))
+            if alignment_score >= th: 
+                have_similar_prots = True
+                break
+        
+        if have_similar_prots == False:
+            non_similar_prots = non_similar_prots | test_unitprot_id
+            
+            
+    print(len(non_similar_prots))
+
 
 def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast_n_annots=0):
     train_set, val_set, test_set = {}, {}, {} # uniprot_id, set of annots
@@ -72,8 +95,7 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
 
 
     studied_terms = compute_studied_terms(train_set, cutoff_value)
-    save_studied_terms(list(studied_terms), GOname, data_generation_process)
-    create_terms_relation_matrix(species, GOname, data_generation_process, relation="adjacency")
+    save_studied_terms(list(studied_terms), go=GOname)
     print(f"\n#-of studied terms: {len(studied_terms)}")
 
     train_set = update_annots_with_studied_terms(train_set, studied_terms)
@@ -100,12 +122,14 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     print_summary(list(val_set.items()))
     print_summary(list(test_set.items()))
 
-    Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
-    Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
-    Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
+    remove_similar_sequence(train_set, val_set)
+
+    # Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
+    # Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
+    # Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
 
 
-generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
-generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
+# generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
+# generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
 generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
 
