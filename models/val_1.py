@@ -30,7 +30,7 @@ go_rels_val.calculate_ic(train_annotations_val + val_annotations)
 
 print("Log: finished computing ic")
 
-val_dataset = SeqAssociationDataset(config.species, config.GO, dataset="val")
+val_dataset = SeqAssociationDataset(config.species, config.GO, config.data_generation_process, dataset="val")
 val_loader = DataLoader(val_dataset, config.batch_size, shuffle=False)
 print(f"val batches: {len(val_loader)}")
 

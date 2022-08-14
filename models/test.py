@@ -21,7 +21,7 @@ print(f"Running test: {out_filename}")
 
 # loading model, criterion
 model = MultimodalTransformer.Model(config=config).to(config.device)
-class_weights = get_class_weights(config.species, config.GO).to(config.device)
+class_weights = get_class_weights(config.species, config.GO, config.data_generation_process).to(config.device)
 label_pred_criterion = torch.nn.BCEWithLogitsLoss(class_weights)
 
 # loading learned weights
@@ -30,7 +30,7 @@ model.load_state_dict(checkpoint['model_state_dict'])
 
 
 # loading dataset
-terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool, config.data_generation_process)
+terms_graph = TermsGraph(config.species, config.GO, config.data_generation_process, config.n_samples_from_pool)
 
 val_loss, val_tmax, val_fmax, val_smin, val_aupr = run_val(model, terms_graph, label_pred_criterion)
 test_loss, test_tmax, test_fmax, test_smin, test_aupr = run_test(model, terms_graph, label_pred_criterion)

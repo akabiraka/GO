@@ -30,7 +30,7 @@ go_rels.calculate_ic(train_annotations + test_annotations)
 
 print("Log: finished computing ic")
 
-test_dataset = SeqAssociationDataset(config.species, config.GO, dataset="test")
+test_dataset = SeqAssociationDataset(config.species, config.GO, config.data_generation_process, dataset="test")
 test_loader = DataLoader(test_dataset, config.batch_size, shuffle=False)
 print(f"test batches: {len(test_loader)}")
 

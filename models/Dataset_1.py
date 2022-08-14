@@ -10,7 +10,7 @@ from sklearn.utils.class_weight import compute_class_weight
 import random
 
 class SeqAssociationDataset(Dataset):
-    def __init__(self, species, GO, dataset="train", data_generation_process="time_series_no_knowledge") -> None:
+    def __init__(self, species, GO, data_generation_process, dataset="train") -> None:
         super(SeqAssociationDataset, self).__init__()
         self.species = species
         self.GO = GO
@@ -46,7 +46,7 @@ class SeqAssociationDataset(Dataset):
 
 
 class TermsGraph(object):
-    def __init__(self, species, GO, n_samples_from_pool=5, data_generation_process="time_series_no_knowledge") -> None:
+    def __init__(self, species, GO, data_generation_process, n_samples_from_pool=5) -> None:
         self.species = species
         self.GO = GO
         self.n_samples = n_samples_from_pool
@@ -138,7 +138,7 @@ class TermsGraph(object):
 
     
 
-def get_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
+def get_class_weights(species, GO, data_generation_process):
     # computing class weights from the train data
     terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
     train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
@@ -155,7 +155,7 @@ def get_class_weights(species, GO, data_generation_process="time_series_no_knowl
 # print(class_weights)
 
 
-def get_positive_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
+def get_positive_class_weights(species, GO, data_generation_process):
     terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
     train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
 

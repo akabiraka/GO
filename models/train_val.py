@@ -21,8 +21,8 @@ print(out_filename)
 
 
 # loading dataset
-terms_graph = TermsGraph(config.species, config.GO, config.n_samples_from_pool, config.data_generation_process)
-train_dataset = SeqAssociationDataset(config.species, config.GO, "train", config.data_generation_process)
+terms_graph = TermsGraph(config.species, config.GO, config.data_generation_process, config.n_samples_from_pool)
+train_dataset = SeqAssociationDataset(config.species, config.GO, config.data_generation_process, "train")
 train_loader = DataLoader(train_dataset, config.batch_size, shuffle=True)
 print(f"train batches: {len(train_loader)}")
 
@@ -30,7 +30,7 @@ print(f"train batches: {len(train_loader)}")
 
 # loading model, criterion, optimizer, summarywriter
 model = MultimodalTransformer.Model(config=config).to(config.device)
-class_weights = get_class_weights(config.species, config.GO).to(config.device)
+class_weights = get_class_weights(config.species, config.GO, config.data_generation_process).to(config.device)
 # pos_class_weights = get_positive_class_weights(config.species, config.GO).to(config.device)
 label_pred_criterion = torch.nn.BCEWithLogitsLoss(weight=class_weights)
 optimizer = torch.optim.AdamW(model.parameters(), lr=config.lr, weight_decay=0.01)
