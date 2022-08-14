@@ -128,10 +128,9 @@ def train(model, data_loader, terms_graph, label_pred_criterion, optimizer, devi
         # print(y_true.shape, seqs.shape, uniprot_ids)
 
         graph = terms_graph.get(uniprot_ids)
-        terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
+        terms, adj_matrix = graph["nodes"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        # y_pred = model(terms, ancestors_rel_matrix, seqs)
         y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 
@@ -158,10 +157,9 @@ def val(model, data_loader, terms_graph, label_pred_criterion, device):
         # print(y_true.shape)
 
         graph = terms_graph.get(uniprot_ids)
-        terms, ancestors_rel_matrix, adj_matrix = graph["nodes"].to(device), graph["ancestors_rel_matrix"].to(device), graph["adjacency_rel_matrix"].to(device)
+        terms, adj_matrix = graph["nodes"].to(device), graph["adjacency_rel_matrix"].to(device)
 
         model.zero_grad(set_to_none=True)
-        # y_pred = model(terms, ancestors_rel_matrix, seqs)
         y_pred = model(terms, adj_matrix, seqs)
         
         # batch_loss, _ = compute_loss(y_pred, y_true, criterion) 

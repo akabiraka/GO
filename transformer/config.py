@@ -52,10 +52,10 @@ class Config(object):
         self.device = "cuda" if torch.cuda.is_available() else "cpu" # "cpu"#
         self.esm1b_embed_dim = 768
 
-        self.data_generation_process = "time_series_no_knowledge" # time_series_no_knowledge, time_delay_no_knowledge, random_split_leakage
+        self.data_generation_process = "random_split_leakage" # time_series_no_knowledge, time_delay_no_knowledge, random_split_leakage
         
 
-    def get_model_name(self, task="Modelv3.2") -> str:
+    def get_model_name(self, task="Modelv3.3") -> str:
         return f"{task}_{self.species}_{self.GO}_{self.lr}_{self.batch_size}_{self.n_epochs}_{self.vocab_size}_{self.max_len_of_a_seq}_{self.embed_dim}_{self.n_samples_from_pool}" +\
                f"_{self.dim_ff}_{self.n_encoder_layers}_{self.n_attn_heads}_{self.dropout}_{self.add_node_embed_layer}_{self.add_positional_encoding_layer}" +\
                f"_{self.device}"

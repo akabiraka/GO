@@ -16,7 +16,7 @@ class SeqAssociationDataset(Dataset):
         self.GO = GO
         
         self.dataset_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/{dataset}.pkl")
-        self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+        self.terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
         
 
     def __len__(self):
@@ -51,12 +51,12 @@ class TermsGraph(object):
         self.GO = GO
         self.n_samples = n_samples_from_pool
 
-        self.terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+        self.terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
         self.train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
 
         self.GOid_vs_uniprotids_dict = self.terms_annotated_to()
-        self.terms_ancestors = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_ancestors.pkl")
-        self.terms_adjacency = Utils.load_pickle(f"data/goa/{self.species}/studied_GO_terms_relation_matrix/{self.GO}_adjacency.pkl")
+        # self.terms_ancestors = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/ancestors.pkl")
+        self.terms_adjacency = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/adjacency.pkl")
     
 
     def terms_annotated_to(self):
@@ -88,7 +88,7 @@ class TermsGraph(object):
         # data["ancestors_rel_matrix"] = torch.tensor(self.terms_ancestors, dtype=torch.float32)# dtype=torch.bool) # torch.logical_not()
         # data["adjacency_rel_matrix"] = torch.tensor(self.terms_adjacency, dtype=torch.float32)
 
-        data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
+        # data["ancestors_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_ancestors, dtype=torch.bool))
         data["adjacency_rel_matrix"] = torch.logical_not(torch.tensor(self.terms_adjacency, dtype=torch.bool))
         return data    
 
@@ -140,7 +140,7 @@ class TermsGraph(object):
 
 def get_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
     # computing class weights from the train data
-    terms_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
     train_annots = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
     
     classes = np.array([key for key, value in terms_dict.items()])
@@ -156,13 +156,13 @@ def get_class_weights(species, GO, data_generation_process="time_series_no_knowl
 
 
 def get_positive_class_weights(species, GO, data_generation_process="time_series_no_knowledge"):
-    terms_to_idx_dict = Utils.load_pickle(f"data/goa/{species}/studied_GO_id_to_index_dicts/{GO}.pkl")
+    terms_dict = Utils.load_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/studied_terms.pkl")
     train_df = pd.read_pickle(f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GO}/train.pkl")
 
     def generate_true_label(GO_terms):
-        y_true = np.zeros(len(terms_to_idx_dict), dtype=np.int32)
+        y_true = np.zeros(len(terms_dict), dtype=np.int32)
         for term in GO_terms:
-            y_true[terms_to_idx_dict.get(term)] = 1
+            y_true[terms_dict.get(term)] = 1
         return y_true
 
 

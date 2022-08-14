@@ -13,7 +13,7 @@ config = Config()
 
 # for evaluation purposes
 go_rels_val = Ontology('data/downloads/go.obo', with_rels=True)
-term_to_idx_dict_val = Utils.load_pickle(f"data/goa/{config.species}/studied_GO_id_to_index_dicts/{config.GO}.pkl")
+term_to_idx_dict_val = Utils.load_pickle(f"data/goa/{config.species}/train_val_test_set/{config.data_generation_process}/{config.GO}/studied_terms.pkl")
 idx_to_term_dict_val = {i:term for term, i in term_to_idx_dict_val.items()}
 terms_set_val = set(term_to_idx_dict_val.keys())
 
