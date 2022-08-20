@@ -58,6 +58,7 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
 
     train_set, val_set = remove_dev_uniprotids_from_test(train_set, val_set) # inplace operation
     train_set, test_set = remove_dev_uniprotids_from_test(train_set, test_set) # inplace operation
+    val_set, test_set = remove_dev_uniprotids_from_test(val_set, test_set) # inplace operation
     print(f"#-prots in train, val, test after keeping only no-knowledge proteins in val and test: {len(train_set)}, {len(val_set)}, {len(test_set)}")
     print_summary(list(train_set.items())) # the number of annotations is increased in train_set, becasue no-knowledge proteins annotations are be added from val/test into train.
 
@@ -100,12 +101,16 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     print_summary(list(val_set.items()))
     print_summary(list(test_set.items()))
 
-    Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
-    Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
-    Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
+    # print(set(train_set.keys()).intersection(set(test_set.keys()))) # no-intersection
+    # print(set(train_set.keys()).intersection(set(val_set.keys()))) # no-intersection
+    # print(set(test_set.keys()).intersection(set(val_set.keys()))) # no-intersection
+
+    # Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
+    # Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
+    # Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
 
 
-generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
-generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
+# generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
+# generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
 generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
 
