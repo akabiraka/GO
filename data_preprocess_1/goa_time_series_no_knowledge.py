@@ -79,7 +79,6 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
 
     train_set = update_annots_with_studied_terms(train_set, studied_terms)
     val_set = update_annots_with_studied_terms(val_set, studied_terms)
-    test_set = update_annots_with_studied_terms(test_set, studied_terms)
     print("\nSummary of sets after updating annotations with studied GO terms: ")
     print_summary(list(train_set.items()))
     print_summary(list(val_set.items()))
@@ -101,16 +100,12 @@ def generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=125, atleast
     print_summary(list(val_set.items()))
     print_summary(list(test_set.items()))
 
-    # print(set(train_set.keys()).intersection(set(test_set.keys()))) # no-intersection
-    # print(set(train_set.keys()).intersection(set(val_set.keys()))) # no-intersection
-    # print(set(test_set.keys()).intersection(set(val_set.keys()))) # no-intersection
-
-    # Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
-    # Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
-    # Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
+    Utils.save_as_pickle(list(train_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/train.pkl")
+    Utils.save_as_pickle(list(val_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/val.pkl")
+    Utils.save_as_pickle(list(test_set.items()), f"data/goa/{species}/train_val_test_set/{data_generation_process}/{GOname}/test.pkl")
 
 
-# generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
-# generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
+generate_dataset(GOname="BP", GO_terms_set=bp_set, cutoff_value=150, atleast_n_annots=0)
+generate_dataset(GOname="CC", GO_terms_set=cc_set, cutoff_value=25, atleast_n_annots=0)
 generate_dataset(GOname="MF", GO_terms_set=mf_set, cutoff_value=25, atleast_n_annots=0)
 
