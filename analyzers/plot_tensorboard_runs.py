@@ -42,7 +42,7 @@ paths = [dir + "Modelv3.2_yeast_MF_0.0001_32_500_370_512_256_5_1024_3_2_0.5_Fals
          dir + "Modelv3.3_yeast_MF_0.0001_32_500_433_512_256_5_1024_3_2_0.5_False_False_cuda/events.out.tfevents.1660502546.NODE050.orc.gmu.edu.19115.0",
          dir + "Modelv3.4_yeast_MF_0.0001_32_500_432_512_256_5_1024_3_2_0.5_False_False_cuda/events.out.tfevents.1660503123.node056.orc.gmu.edu.23908.0"]
 
-models = ["GOFormer-TDNK", "GOFormer-RS", "GOFormer-TSNK"]
+models = ["GOProFormer-TDNK", "GOProFormer-RS", "GOProFormer-TSNK"]
 img_names = [f"{GOname}_comparison_train_loss", f"{GOname}_comparison_val_loss", f"{GOname}_comparison_val_fmax"]
 
 
